@@ -1,0 +1,80 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion 27
+    defaultConfig {
+        applicationId "github.io.mssjsg.bookbag"
+        minSdkVersion 15
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    dataBinding {
+        enabled = true
+    }
+}
+
+ext {
+    supportLibraryVersion = '27.1.0'
+    lifecycleVersion = '1.1.1'
+    roomVersion = '1.0.0'
+    constraintLayoutVersion = '1.0.2'
+    pagingVersion = '1.0.0-alpha7'
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation"org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+
+    //support libraries
+    implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
+    implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
+    implementation "com.android.support:design:$supportLibraryVersion"
+    implementation "com.android.support:recyclerview-v7:$supportLibraryVersion"
+    implementation "com.android.support:support-v4:$supportLibraryVersion"
+    implementation "com.android.support.constraint:constraint-layout:$constraintLayoutVersion"
+
+    // ViewModel and LiveData
+    implementation "android.arch.lifecycle:extensions:$lifecycleVersion"
+    annotationProcessor "android.arch.lifecycle:compiler:$lifecycleVersion"
+
+    // Room
+    implementation "android.arch.persistence.room:runtime:$roomVersion"
+    annotationProcessor "android.arch.persistence.room:compiler:$roomVersion"
+
+    // Paging
+    implementation "android.arch.paging:runtime:$pagingVersion"
+
+    // RxJava support for Room
+    implementation "android.arch.persistence.room:rxjava2:$roomVersion"
+
+    // ReactiveStreams support for LiveData
+    implementation "android.arch.lifecycle:reactivestreams:$lifecycleVersion"
+
+    //RxJava
+    implementation "io.reactivex.rxjava2:rxjava:2.1.12"
+
+    kapt 'com.android.databinding:compiler:3.0.1'
+
+    //test
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+
+    // Test helpers for LiveData
+    testImplementation "android.arch.core:core-testing:$lifecycleVersion"
+
+    // Test helpers for Room
+    testImplementation "android.arch.persistence.room:testing:$roomVersion"
+}
