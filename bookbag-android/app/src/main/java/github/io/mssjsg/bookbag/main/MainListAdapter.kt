@@ -1,9 +1,9 @@
-package github.io.mssjsg.bookbag
+package github.io.mssjsg.bookbag.main
 
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import github.io.mssjsg.bookbag.data.BookmarkItem
+import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.databinding.ItemBookmarkBinding
 
 /**
@@ -11,10 +11,10 @@ import github.io.mssjsg.bookbag.databinding.ItemBookmarkBinding
  */
 class MainListAdapter() : RecyclerView.Adapter<MainListItemViewHolder> () {
 
-    var items : List<BookmarkItem> = emptyList()
-        get() = ArrayList<BookmarkItem>(field)
+    var items : List<Bookmark> = emptyList()
+        get() = ArrayList<Bookmark>(field)
         set(value) {
-            field = ArrayList<BookmarkItem>(value)
+            field = ArrayList<Bookmark>(value)
         }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MainListItemViewHolder {

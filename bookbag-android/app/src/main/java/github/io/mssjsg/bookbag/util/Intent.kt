@@ -1,7 +1,7 @@
 @file:JvmName("IntentUtils")
 @file:JvmMultifileClass
 
-package github.io.mssjsg.bookbag.extension
+package github.io.mssjsg.bookbag.util
 import android.content.Intent
 
 /**

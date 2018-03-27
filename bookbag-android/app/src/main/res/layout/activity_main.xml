@@ -7,13 +7,13 @@
     <data>
         <variable
             name="viewmodel"
-            type="github.io.mssjsg.bookbag.BookmarksViewModel"/>
+            type="github.io.mssjsg.bookbag.main.MainViewModel"/>
     </data>
 
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="github.io.mssjsg.bookbag.MainActivity">
+        tools:context="github.io.mssjsg.bookbag.main.MainActivity">
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/bookmarks_list"
