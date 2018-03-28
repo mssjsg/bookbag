@@ -22,11 +22,6 @@ class MainListItemViewHolder(private val mainViewModel: MainViewModel, private v
        itemBookmarkBinding.root.setOnClickListener { bookmark?.let { mainViewModel.toggleSelected(it.url) } }
     }
 
-    private fun bindBookmark(bookmark: Bookmark) {
-        itemBookmarkBinding.item = bookmark
-        itemBookmarkBinding.executePendingBindings()
-    }
-
     fun setBackground(@DrawableRes backgroundResId: Int) {
         if (backgroundResId != 0) {
             itemBookmarkBinding.background = ResourcesCompat.getDrawable(itemView.resources, backgroundResId, null)
