@@ -1,17 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
         <variable
             name="item"
             type="github.io.mssjsg.bookbag.data.Bookmark"/>
+        
+        <variable
+            name="background"
+            type="android.graphics.drawable.Drawable"/>
     </data>
 
-    <TextView
-        android:id="@+id/text_url"
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@{item.url}"/>
+        android:background="@{background}">
+
+        <TextView
+            style="@style/TextAppearance.AppCompat.Headline"
+            android:id="@+id/name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toStartOf="@+id/thumbnail"
+            app:layout_constraintStart_toStartOf="parent"
+            android:paddingHorizontal="?attr/listPreferredItemPaddingLeft"
+            android:paddingVertical="?attr/listPreferredItemPaddingLeft"
+            android:text="@{item.name}"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:lines="1"
+            tools:text="testing"/>
+
+        <ImageView
+            android:id="@+id/thumbnail"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="H,1:1"/>
+
+    </android.support.constraint.ConstraintLayout>
 
 </layout>

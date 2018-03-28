@@ -5,6 +5,7 @@ import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.BookBagAppComponent
@@ -31,9 +32,10 @@ class MainActivity : AppCompatActivity() {
         viewModel.observe(this)
 
         mainBinding.viewmodel = viewModel
-        mainListAdapter = MainListAdapter()
+        mainListAdapter = MainListAdapter(viewModel)
         mainBinding.bookmarksList.layoutManager = LinearLayoutManager(this)
         mainBinding.bookmarksList.adapter = mainListAdapter
+        mainBinding.bookmarksList.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
 
         detectNewUrl(intent)
     }

@@ -10,4 +10,5 @@ import android.arch.persistence.room.PrimaryKey
 data class Bookmark(
         @PrimaryKey
         val url:String,
-        val name:String = url)
+        val name:String = url,
+        val imageUrl:String? = null)
