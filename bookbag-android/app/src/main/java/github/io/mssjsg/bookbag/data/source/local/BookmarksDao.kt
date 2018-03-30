@@ -20,7 +20,4 @@ interface BookmarksDao {
 
     @Query("DELETE FROM bookmarks WHERE url = :bookmarkUrl")
     fun deleteBookmarkByUrl(bookmarkUrl: String)
-
-    @Query("DELETE FROM bookmarks")
-    fun deleteBookmarks();
 }

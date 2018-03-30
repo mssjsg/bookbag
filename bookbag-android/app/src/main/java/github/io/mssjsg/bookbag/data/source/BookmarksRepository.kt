@@ -10,6 +10,9 @@ import javax.inject.Singleton
  * Created by Sing on 27/3/2018.
  */
 class BookmarksRepository(val localDataSource: BookmarksDataSource): BookmarksDataSource {
+    override fun deleteBookmarks(bookmarkUrls: List<String>) {
+        localDataSource.deleteBookmarks(bookmarkUrls)
+    }
 
     override fun getBookmarks(): LiveData<List<Bookmark>> {
         return localDataSource.getBookmarks()
@@ -17,10 +20,6 @@ class BookmarksRepository(val localDataSource: BookmarksDataSource): BookmarksDa
 
     override fun saveBookmark(bookmark: Bookmark) {
         localDataSource.saveBookmark(bookmark)
-    }
-
-    override fun deleteBookmark(url: String) {
-        localDataSource.deleteBookmark(url)
     }
 
     override fun updateBookmark(bookmark: Bookmark) {

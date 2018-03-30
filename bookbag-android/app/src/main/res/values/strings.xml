@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Bookbag</string>
+    <string name="menu_item_delete">Delete</string>
+    <string name="menu_item_move">Move</string>
 </resources>

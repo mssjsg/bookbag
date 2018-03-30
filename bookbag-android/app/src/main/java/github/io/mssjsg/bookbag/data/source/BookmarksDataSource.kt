@@ -11,7 +11,7 @@ interface BookmarksDataSource {
 
     fun saveBookmark(bookmark: Bookmark)
 
-    fun deleteBookmark(url: String)
-
     fun updateBookmark(bookmark: Bookmark)
+
+    fun deleteBookmarks(bookmarkUrls: List<String>)
 }

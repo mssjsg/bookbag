@@ -12,7 +12,7 @@ class MainListAdapter(val mainViewModel: MainViewModel) : RecyclerView.Adapter<M
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MainListItemViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        return MainListItemViewHolder(mainViewModel, ItemBookmarkBinding.inflate(layoutInflater, parent, false))
+        return MainListItemViewHolder(mainViewModel.liveBus, ItemBookmarkBinding.inflate(layoutInflater, parent, false))
     }
 
     override fun onBindViewHolder(holder: MainListItemViewHolder, position: Int) {
