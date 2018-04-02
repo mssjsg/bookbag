@@ -1,9 +1,6 @@
 package github.io.mssjsg.bookbag.main
 
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.Observer
-import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.*
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableArrayMap
 import android.databinding.ObservableList
@@ -27,45 +24,35 @@ class MainViewModel @Inject constructor(val bookmarksRepository: BookmarksReposi
             field = value
             if (!value) selectedMap.clear()
         }
-    val items: ObservableList<Bookmark> = ObservableArrayList()
+    val items: MutableLiveData<List<Bookmark>> = MutableLiveData()
     val selectedMap: ObservableMap<String, Boolean> = ObservableArrayMap()
 
-    private val itemsLiveData: LiveData<List<Bookmark>> = bookmarksRepository.getBookmarks()
-
-    fun observe(lifecycleOwner: LifecycleOwner) {
-        itemsLiveData.observe(lifecycleOwner, Observer { list ->
-            items.clear()
-            list?.let {
-                items.addAll(list)
-            }
-        })
+    init {
+        bookmarksRepository.getBookmarks().observeForever { items.postValue(it) }
     }
 
     private fun setSelectedByUrl(url: String, selected: Boolean) {
         selectedMap.put(url, selected)
     }
 
+    fun getBookmark(position: Int): Bookmark? {
+        return items.value?.get(position)
+    }
+
     fun setSelected(position: Int, selected: Boolean) {
-        val bookmark = items.get(position)
-        setSelectedByUrl(bookmark.url, selected)
+        getBookmark(position)?.apply { setSelectedByUrl(url, selected) }
     }
 
     fun toggleSelected(position: Int) {
-        val bookmark = items.get(position)
-        setSelectedByUrl(bookmark.url, !isSelected(bookmark.url))
+        getBookmark(position)?.apply { setSelectedByUrl(url, !isSelected(url)) }
     }
 
     fun isSelected(url: String): Boolean {
-        return selectedMap.get(url)?:false
+        return selectedMap.get(url) ?: false
     }
 
     fun isSelected(position: Int): Boolean {
-        val bookmark = items.get(position)
-        bookmark?.let {
-            return (selectedMap.get(it.url)?: false)
-        }
-
-        return false
+        return getBookmark(position)?.run { return isSelected(url) } ?: false
     }
 
     fun addBookmark(bookmark: Bookmark) {

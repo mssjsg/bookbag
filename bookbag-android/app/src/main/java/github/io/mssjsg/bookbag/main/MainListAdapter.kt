@@ -16,12 +16,12 @@ class MainListAdapter(val mainViewModel: MainViewModel) : RecyclerView.Adapter<M
     }
 
     override fun onBindViewHolder(holder: MainListItemViewHolder, position: Int) {
-        holder.bookmark = mainViewModel.items[position]
+        holder.bookmark = mainViewModel.getBookmark(position)
         holder.setBackground(mainViewModel.getBackground(position))
     }
 
     override fun getItemCount(): Int {
-        return mainViewModel.items.size
+        return mainViewModel.items.value?.size ?: 0
     }
 
 }

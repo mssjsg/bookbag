@@ -35,7 +35,6 @@ class MainActivity : AppCompatActivity() {
         //init view model
         viewModel = ViewModelProviders.of(this, ViewModelFactory(getAppComponent()))
                 .get(MainViewModel::class.java)
-        viewModel.observe(this)
 
         //init event
         viewModel.liveBus.subscribe(this, Observer {
@@ -60,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         mainBinding.bookmarksList.layoutManager = LinearLayoutManager(this)
         mainBinding.bookmarksList.adapter = mainListAdapter
         mainBinding.bookmarksList.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
+        mainBinding.setLifecycleOwner(this)
 
         detectNewUrl(intent)
     }
