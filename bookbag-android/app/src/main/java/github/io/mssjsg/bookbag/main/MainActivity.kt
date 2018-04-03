@@ -15,6 +15,7 @@ import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.BookBagAppComponent
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.data.Bookmark
+import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.databinding.ActivityMainBinding
 import github.io.mssjsg.bookbag.util.getSharedUrl
 import github.io.mssjsg.bookbag.util.viewmodel.ViewModelFactory
@@ -35,7 +36,6 @@ class MainActivity : AppCompatActivity() {
         //init view model
         viewModel = ViewModelProviders.of(this, ViewModelFactory(getAppComponent()))
                 .get(MainViewModel::class.java)
-        viewModel.setLifecycleOwner(this)
 
         //init event
         viewModel.liveBus.subscribe(this, Observer {
@@ -62,6 +62,8 @@ class MainActivity : AppCompatActivity() {
         mainBinding.bookmarksList.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
 
         detectNewUrl(intent)
+
+        viewModel.addFolder(Folder(name = "HIHIHI"))
     }
 
     override fun onNewIntent(intent: Intent?) {

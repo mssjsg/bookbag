@@ -1,82 +1,125 @@
 package github.io.mssjsg.bookbag.main
 
-import android.arch.lifecycle.*
+import android.arch.lifecycle.ViewModel
 import android.databinding.ObservableArrayList
-import android.databinding.ObservableArrayMap
 import android.databinding.ObservableList
-import android.databinding.ObservableMap
-import android.support.annotation.DrawableRes
-import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.data.Bookmark
+import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.data.source.BookmarksRepository
+import github.io.mssjsg.bookbag.data.source.FoldersRepository
+import github.io.mssjsg.bookbag.main.listitem.BookmarkListItem
+import github.io.mssjsg.bookbag.main.listitem.FolderListItem
+import github.io.mssjsg.bookbag.main.listitem.ListItem
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.util.viewmodel.ViewModelScope
+import io.reactivex.Flowable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.functions.BiFunction
+import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
 /**
  * Created by Sing on 26/3/2018.
  */
 @ViewModelScope
-class MainViewModel @Inject constructor(val bookmarksRepository: BookmarksRepository, val liveBus: LiveBus) : ViewModel() {
+class MainViewModel @Inject constructor(val bookmarksRepository: BookmarksRepository,
+                                        val foldersRepository: FoldersRepository,
+                                        val liveBus: LiveBus) : ViewModel() {
+
+    companion object {
+        const val ITEM_VIEW_TYPE_UNKNOWN = -1
+        const val ITEM_VIEW_TYPE_BOOKMARK = 0
+        const val ITEM_VIEW_TYPE_FOLDER = 1
+    }
 
     var isInActionMode = false
         set(value) {
             field = value
-            if (!value) selectedMap.clear()
+            for (listItem: ListItem in items) {
+                listItem.isSelected = false
+            }
         }
 
-    val items: ObservableList<Bookmark> = ObservableArrayList()
-    val selectedMap: ObservableMap<String, Boolean> = ObservableArrayMap()
+    val items: ObservableList<ListItem> = ObservableArrayList()
 
-    private val bookmarksData = bookmarksRepository.getBookmarks()
+    private val listItemsDisposable: Disposable
 
-    fun setLifecycleOwner(lifecycleOwner: LifecycleOwner) {
-        bookmarksData.observe(lifecycleOwner, object: Observer<List<Bookmark>> {
-            override fun onChanged(t: List<Bookmark>?) {
-                items.clear()
-                t?.apply { items.addAll(t) }
+    init {
+        listItemsDisposable = Flowable.combineLatest(bookmarksRepository.getBookmarks(),
+                foldersRepository.getFolders(), BiFunction<List<Bookmark>, List<Folder>, List<ListItem>> {
+            bookmarks, folders ->
+            val items: MutableList<ListItem> = ArrayList()
+            for (bookmark: Bookmark in bookmarks) {
+                items.add(BookmarkListItem(bookmark.name, bookmark.url, bookmark.folderId))
             }
+            for (folder: Folder in folders) {
+                items.add(FolderListItem(folder.name, folderId = folder.folderId?:-1,
+                        parentFolderId = folder.parentFolderId))
+            }
+
+            items
+        }).subscribe({
+            items.clear()
+            items.addAll(it)
         })
     }
 
-    private fun setSelectedByUrl(url: String, selected: Boolean) {
-        selectedMap.put(url, selected)
-    }
-
-    fun getBookmark(position: Int): Bookmark? {
+    fun getListItem(position: Int): ListItem? {
         return items.run {
             if (size > position) get(position) else null
         }
     }
 
     fun setSelected(position: Int, selected: Boolean) {
-        getBookmark(position)?.apply { setSelectedByUrl(url, selected) }
+        getListItem(position)?.apply {
+            this.isSelected = selected
+            items.set(position, this)
+        }
     }
 
     fun toggleSelected(position: Int) {
-        getBookmark(position)?.apply { setSelectedByUrl(url, !isSelected(url)) }
-    }
-
-    fun isSelected(url: String): Boolean {
-        return selectedMap.get(url) ?: false
-    }
-
-    fun isSelected(position: Int): Boolean {
-        return getBookmark(position)?.run { return isSelected(url) } ?: false
+        getListItem(position)?.apply {
+            isSelected = !isSelected
+            items.set(position, this)
+        }
     }
 
     fun addBookmark(bookmark: Bookmark) {
         bookmarksRepository.saveBookmark(bookmark)
     }
 
-    fun deleteSelectedItems() {
-        val selectedUrls = ArrayList<String>()
-        selectedUrls.addAll(selectedMap.filterKeys { selectedMap.get(it) ?: false }.keys)
-        bookmarksRepository.deleteBookmarks(selectedUrls)
+    fun addFolder(folder: Folder) {
+        foldersRepository.saveFolder(folder)
     }
 
-    @DrawableRes
-    fun getBackground(position: Int): Int {
-        return if (isSelected(position)) R.drawable.background_selected else 0
+    fun deleteSelectedItems() {
+        val selectedUrls = ArrayList<String>()
+        val selectedFolderIds = ArrayList<Int>()
+        for (listItem: ListItem in items) {
+            if (listItem.isSelected) {
+                when(listItem) {
+                    is BookmarkListItem -> selectedUrls.add(listItem.url)
+                    is FolderListItem -> selectedFolderIds.add(listItem.folderId)
+                }
+            }
+        }
+        bookmarksRepository.deleteBookmarks(selectedUrls)
+        foldersRepository.deleteFolders(selectedFolderIds)
+    }
+
+    fun getItemViewType(position: Int): Int {
+        return getListItem(position)?.let {
+            when(it) {
+                is BookmarkListItem -> ITEM_VIEW_TYPE_BOOKMARK
+                is FolderListItem -> ITEM_VIEW_TYPE_FOLDER
+                else -> ITEM_VIEW_TYPE_UNKNOWN
+            }
+        } ?: ITEM_VIEW_TYPE_UNKNOWN
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        listItemsDisposable.dispose()
     }
 }
