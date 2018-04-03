@@ -24,11 +24,19 @@ class MainViewModel @Inject constructor(val bookmarksRepository: BookmarksReposi
             field = value
             if (!value) selectedMap.clear()
         }
-    val items: MutableLiveData<List<Bookmark>> = MutableLiveData()
+
+    val items: ObservableList<Bookmark> = ObservableArrayList()
     val selectedMap: ObservableMap<String, Boolean> = ObservableArrayMap()
 
-    init {
-        bookmarksRepository.getBookmarks().observeForever { items.postValue(it) }
+    private val bookmarksData = bookmarksRepository.getBookmarks()
+
+    fun setLifecycleOwner(lifecycleOwner: LifecycleOwner) {
+        bookmarksData.observe(lifecycleOwner, object: Observer<List<Bookmark>> {
+            override fun onChanged(t: List<Bookmark>?) {
+                items.clear()
+                t?.apply { items.addAll(t) }
+            }
+        })
     }
 
     private fun setSelectedByUrl(url: String, selected: Boolean) {
@@ -36,7 +44,9 @@ class MainViewModel @Inject constructor(val bookmarksRepository: BookmarksReposi
     }
 
     fun getBookmark(position: Int): Bookmark? {
-        return items.value?.get(position)
+        return items.run {
+            if (size > position) get(position) else null
+        }
     }
 
     fun setSelected(position: Int, selected: Boolean) {

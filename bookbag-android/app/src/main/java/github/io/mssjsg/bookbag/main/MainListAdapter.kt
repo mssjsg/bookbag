@@ -21,7 +21,7 @@ class MainListAdapter(val mainViewModel: MainViewModel) : RecyclerView.Adapter<M
     }
 
     override fun getItemCount(): Int {
-        return mainViewModel.items.value?.size ?: 0
+        return mainViewModel.items.size
     }
 
 }

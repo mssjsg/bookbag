@@ -32,7 +32,6 @@ ext {
     constraintLayoutVersion = '1.0.2'
     pagingVersion = '1.0.0-alpha7'
     daggerVersion = '2.15'
-    rxJavaVersion = '2.1.12'
 }
 
 dependencies {
@@ -50,6 +49,7 @@ dependencies {
     //Kotlin
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5"
 
     //support libraries
     implementation "com.android.support:appcompat-v7:$supportLibraryVersion"
@@ -74,9 +74,6 @@ dependencies {
 
     // ReactiveStreams support for LiveData
     implementation "android.arch.lifecycle:reactivestreams:$lifecycleVersion"
-
-    //RxJava
-    implementation "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
 
     //Dagger
     implementation "com.google.dagger:dagger:$daggerVersion"
