@@ -9,11 +9,15 @@ import io.reactivex.Flowable
  */
 @Dao
 interface FoldersDao {
-    @Query("SELECT * FROM folders")
-    fun getFolders(): Flowable<List<Folder>>
+
+    @Query("SELECT * FROM folders WHERE parent_folder_id IS NULL")
+    fun getHomeFolders(): Flowable<List<Folder>>
 
     @Query("SELECT * FROM folders WHERE parent_folder_id = :folderId")
-    fun getFoldersByParentFolderId(folderId: String): Flowable<List<Folder>>
+    fun getFoldersByParentFolderId(folderId: Int): Flowable<List<Folder>>
+
+    @Query("SELECT * FROM folders WHERE folder_id = :folderId")
+    fun getCurrentFolderByFolderId(folderId: Int): Flowable<Folder>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertFolder(folder: Folder)

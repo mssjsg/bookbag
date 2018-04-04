@@ -1,18 +1,17 @@
 package github.io.mssjsg.bookbag.data.source
 
-import android.arch.lifecycle.LiveData
-import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.Folder
-import github.io.mssjsg.bookbag.data.qualifier.LocalDataSource
 import io.reactivex.Flowable
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Created by Sing on 27/3/2018.
  */
 class FoldersRepository(val localDataSource: FoldersDataSource): FoldersDataSource {
-    override fun getFolders(folderId: String?): Flowable<List<Folder>> {
+    override fun getCurrentFolder(folderId: Int): Flowable<Folder> {
+        return localDataSource.getCurrentFolder(folderId)
+    }
+
+    override fun getFolders(folderId: Int?): Flowable<List<Folder>> {
         return localDataSource.getFolders(folderId)
     }
 

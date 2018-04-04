@@ -9,7 +9,7 @@ import dagger.Provides
  * Created by Sing on 27/3/2018.
  */
 @Module
-class AppModule(val application: Application) {
+class AppModule(val application: BookBagApplication) {
 
     @Provides
     fun providesApplicationContext(): Context {
@@ -17,7 +17,7 @@ class AppModule(val application: Application) {
     }
 
     @Provides
-    fun providesApplication(): Application {
+    fun providesApplication(): BookBagApplication {
         return application
     }
 }

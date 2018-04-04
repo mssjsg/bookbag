@@ -7,7 +7,9 @@ import io.reactivex.Flowable
  * Created by Sing on 27/3/2018.
  */
 interface FoldersDataSource {
-    fun getFolders(folderId: String? = null) : Flowable<List<Folder>>
+    fun getFolders(folderId: Int? = null) : Flowable<List<Folder>>
+
+    fun getCurrentFolder(folderId: Int) : Flowable<Folder>
 
     fun saveFolder(folder: Folder)
 

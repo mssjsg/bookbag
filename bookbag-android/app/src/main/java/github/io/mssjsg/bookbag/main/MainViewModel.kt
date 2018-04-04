@@ -1,21 +1,28 @@
 package github.io.mssjsg.bookbag.main
 
+import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.ViewModel
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
+import github.io.mssjsg.bookbag.BookBagApplication
+import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.data.source.BookmarksRepository
 import github.io.mssjsg.bookbag.data.source.FoldersRepository
 import github.io.mssjsg.bookbag.main.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.main.listitem.FolderListItem
+import github.io.mssjsg.bookbag.main.listitem.FolderPathItem
 import github.io.mssjsg.bookbag.main.listitem.ListItem
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.util.viewmodel.ViewModelScope
 import io.reactivex.Flowable
+import io.reactivex.Maybe
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
+import io.reactivex.functions.Function
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
@@ -23,9 +30,10 @@ import javax.inject.Inject
  * Created by Sing on 26/3/2018.
  */
 @ViewModelScope
-class MainViewModel @Inject constructor(val bookmarksRepository: BookmarksRepository,
+class MainViewModel @Inject constructor(val application: BookBagApplication,
+                                        val bookmarksRepository: BookmarksRepository,
                                         val foldersRepository: FoldersRepository,
-                                        val liveBus: LiveBus) : ViewModel() {
+                                        val liveBus: LiveBus) : AndroidViewModel(application) {
 
     companion object {
         const val ITEM_VIEW_TYPE_UNKNOWN = -1
@@ -41,9 +49,14 @@ class MainViewModel @Inject constructor(val bookmarksRepository: BookmarksReposi
             }
         }
 
+    var currentFolderId: Int? = null
+
     val items: ObservableList<ListItem> = ObservableArrayList()
 
+    val paths: ObservableList<FolderPathItem> = ObservableArrayList()
+
     private val listItemsDisposable: Disposable
+    private val folderPathItemsDisposable: Disposable
 
     init {
         listItemsDisposable = Flowable.combineLatest(bookmarksRepository.getBookmarks().map {
@@ -64,10 +77,30 @@ class MainViewModel @Inject constructor(val bookmarksRepository: BookmarksReposi
             items.addAll(folders)
             items.addAll(bookmarks)
             items
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe({ listItems: List<ListItem> ->
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe { listItems ->
             items.clear()
             items.addAll(listItems)
-        })
+        }
+
+        folderPathItemsDisposable = getFolders(currentFolderId).flatMapIterable { it }.map {
+            FolderPathItem(it.name, it.folderId)
+        }.toList().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe {
+            folderPathItems ->
+            paths.clear()
+            paths.addAll(folderPathItems)
+        }
+    }
+
+    private fun getFolders(folderId: Int?, folderPathItems: MutableList<Folder> = ArrayList()): Flowable<List<Folder>> {
+        folderId?.let {
+            return foldersRepository.getCurrentFolder(it).flatMap {
+                folderPathItems.add(0, it)
+                getFolders(it.parentFolderId, folderPathItems)
+            }
+        } ?:let {
+            folderPathItems.add(0, Folder(null, application.getString(R.string.path_home)))
+            return Flowable.just(folderPathItems)
+        }
     }
 
     fun getListItem(position: Int): ListItem? {
@@ -126,5 +159,6 @@ class MainViewModel @Inject constructor(val bookmarksRepository: BookmarksReposi
     override fun onCleared() {
         super.onCleared()
         listItemsDisposable.dispose()
+        folderPathItemsDisposable.dispose()
     }
 }

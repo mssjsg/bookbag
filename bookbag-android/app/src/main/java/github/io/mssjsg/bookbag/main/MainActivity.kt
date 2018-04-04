@@ -24,6 +24,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var mainBinding: ActivityMainBinding
     private lateinit var mainListAdapter: MainListAdapter
+    private lateinit var pathListAdapter: PathListAdapter
+
     private lateinit var actionModeCallback: ActionModeCallback
 
     companion object {
@@ -63,13 +65,14 @@ class MainActivity : AppCompatActivity() {
 
         //init adapter
         mainListAdapter = MainListAdapter(viewModel)
+        pathListAdapter = PathListAdapter(viewModel)
 
         //init bind views
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         mainBinding.viewmodel = viewModel
-        mainBinding.bookmarksList.layoutManager = LinearLayoutManager(this)
         mainBinding.bookmarksList.adapter = mainListAdapter
         mainBinding.bookmarksList.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
+        mainBinding.pathsList.adapter = pathListAdapter
 
         detectNewUrl(intent)
     }
