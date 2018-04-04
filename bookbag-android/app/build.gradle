@@ -79,4 +79,7 @@ dependencies {
     //Dagger
     implementation "com.google.dagger:dagger:$daggerVersion"
     kapt "com.google.dagger:dagger-compiler:$daggerVersion"
+
+    //KTX
+    implementation 'androidx.core:core-ktx:0.3'
 }

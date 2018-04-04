@@ -8,9 +8,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
-import android.view.ActionMode
-import android.view.Menu
-import android.view.MenuItem
+import android.view.*
 import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.BookBagAppComponent
 import github.io.mssjsg.bookbag.R
@@ -19,6 +17,7 @@ import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.databinding.ActivityMainBinding
 import github.io.mssjsg.bookbag.util.getSharedUrl
 import github.io.mssjsg.bookbag.util.viewmodel.ViewModelFactory
+import github.io.mssjsg.bookbag.widget.SimpleInputDialogFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,6 +25,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mainBinding: ActivityMainBinding
     private lateinit var mainListAdapter: MainListAdapter
     private lateinit var actionModeCallback: ActionModeCallback
+
+    companion object {
+        private const val REQUEST_ID_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.REQUEST_ID_CREATE_NEW_FOLDER"
+        private const val TAG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.TAG_CREATE_NEW_FOLDER"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,19 +41,25 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProviders.of(this, ViewModelFactory(getAppComponent()))
                 .get(MainViewModel::class.java)
 
-        //init event
-        viewModel.liveBus.subscribe(this, Observer {
-            startActionMode(actionModeCallback)
-            viewModel.setSelected(it!!.position, true)
-        }, ItemLongClickEvent::class)
+        viewModel.liveBus.let {
+            //init event
+            it.subscribe(this, Observer {
+                startActionMode(actionModeCallback)
+                viewModel.setSelected(it!!.position, true)
+            }, ItemLongClickEvent::class)
 
-        viewModel.liveBus.subscribe(this, Observer {
-            if (viewModel.isInActionMode) {
-                it?.let { viewModel.toggleSelected(it.position) }
-            } else {
-                //TODO go to url
-            }
-        }, ItemClickEvent::class)
+            it.subscribe(this, Observer {
+                if (viewModel.isInActionMode) {
+                    it?.let { viewModel.toggleSelected(it.position) }
+                } else {
+                    //TODO go to url
+                }
+            }, ItemClickEvent::class)
+
+            it.subscribe(this, Observer {
+                it?.apply { viewModel.addFolder(Folder(name = input)) }
+            }, SimpleInputDialogFragment.ConfirmEvent::class)
+        }
 
         //init adapter
         mainListAdapter = MainListAdapter(viewModel)
@@ -62,8 +72,6 @@ class MainActivity : AppCompatActivity() {
         mainBinding.bookmarksList.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
 
         detectNewUrl(intent)
-
-        viewModel.addFolder(Folder(name = "HIHIHI"))
     }
 
     override fun onNewIntent(intent: Intent?) {
@@ -80,6 +88,26 @@ class MainActivity : AppCompatActivity() {
         if (!newUrl.isNullOrBlank()) {
             viewModel.addBookmark(Bookmark(url = newUrl ?: ""))
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        item?.apply {
+            when(itemId) {
+                R.id.item_new_folder -> {
+                    SimpleInputDialogFragment.newInstance(REQUEST_ID_CREATE_NEW_FOLDER,
+                            hint = getString(R.string.hint_folder_name),
+                            title = getString(R.string.title_new_folder))
+                            .show(supportFragmentManager, TAG_CREATE_NEW_FOLDER)
+                }
+            }
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 
     private inner class ActionModeCallback : ActionMode.Callback {

@@ -46,22 +46,27 @@ class MainViewModel @Inject constructor(val bookmarksRepository: BookmarksReposi
     private val listItemsDisposable: Disposable
 
     init {
-        listItemsDisposable = Flowable.combineLatest(bookmarksRepository.getBookmarks(),
-                foldersRepository.getFolders(), BiFunction<List<Bookmark>, List<Folder>, List<ListItem>> {
-            bookmarks, folders ->
+        listItemsDisposable = Flowable.combineLatest(bookmarksRepository.getBookmarks().map {
             val items: MutableList<ListItem> = ArrayList()
-            for (bookmark: Bookmark in bookmarks) {
+            for (bookmark: Bookmark in it) {
                 items.add(BookmarkListItem(bookmark.name, bookmark.url, bookmark.folderId))
             }
-            for (folder: Folder in folders) {
-                items.add(FolderListItem(folder.name, folderId = folder.folderId?:-1,
+            items
+        }, foldersRepository.getFolders().map {
+            val items: MutableList<ListItem> = ArrayList()
+            for (folder: Folder in it) {
+                items.add(FolderListItem(folder.name, folderId = folder.folderId ?: -1,
                         parentFolderId = folder.parentFolderId))
             }
-
             items
-        }).subscribe({
+        }, BiFunction<List<ListItem>, List<ListItem>, List<ListItem>> { bookmarks, folders ->
+            val items: MutableList<ListItem> = ArrayList()
+            items.addAll(folders)
+            items.addAll(bookmarks)
+            items
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe({ listItems: List<ListItem> ->
             items.clear()
-            items.addAll(it)
+            items.addAll(listItems)
         })
     }
 
