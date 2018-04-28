@@ -11,9 +11,15 @@ import java.util.concurrent.Executor
  * Created by Sing on 27/3/2018.
  */
 class BookmarksLocalDataSource(val executor: Executor, val bookmarksDao: BookmarksDao) : BookmarksDataSource {
-    override fun getBookmarks(folderId: String?): Flowable<List<Bookmark>> {
+    override fun moveBookmark(url: String, folderId: Int?) {
+        executor.execute {
+            bookmarksDao.moveBookmark(url, folderId)
+        }
+    }
+
+    override fun getBookmarks(folderId: Int?): Flowable<List<Bookmark>> {
         return folderId?.let { bookmarksDao.getBookmarksByFolderId(folderId) }
-                ?: bookmarksDao.getBookmarks()
+                ?: bookmarksDao.getHomeBookmarks()
     }
 
     override fun deleteBookmarks(bookmarkUrls: List<String>) {

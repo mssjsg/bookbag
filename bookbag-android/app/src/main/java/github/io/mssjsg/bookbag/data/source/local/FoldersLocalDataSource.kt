@@ -9,6 +9,12 @@ import java.util.concurrent.Executor
  * Created by Sing on 27/3/2018.
  */
 class FoldersLocalDataSource(val executor: Executor, val foldersDao: FoldersDao) : FoldersDataSource {
+    override fun moveFolder(folderId: Int, parentFolderId: Int?) {
+        executor.execute {
+            foldersDao.moveFolder(folderId, parentFolderId)
+        }
+    }
+
     override fun getCurrentFolder(folderId: Int): Flowable<Folder> {
         return foldersDao.getCurrentFolderByFolderId(folderId)
     }

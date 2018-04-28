@@ -1,4 +1,4 @@
-package github.io.mssjsg.bookbag.main.listitem
+package github.io.mssjsg.bookbag.list.listitem
 
 class FolderListItem(name: String,
                           val folderId: Int,

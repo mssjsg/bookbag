@@ -11,7 +11,11 @@ import javax.inject.Singleton
  * Created by Sing on 27/3/2018.
  */
 class BookmarksRepository(val localDataSource: BookmarksDataSource): BookmarksDataSource {
-    override fun getBookmarks(folderId: String?): Flowable<List<Bookmark>> {
+    override fun moveBookmark(url: String, folderId: Int?) {
+        localDataSource.moveBookmark(url, folderId)
+    }
+
+    override fun getBookmarks(folderId: Int?): Flowable<List<Bookmark>> {
         return localDataSource.getBookmarks(folderId)
     }
 

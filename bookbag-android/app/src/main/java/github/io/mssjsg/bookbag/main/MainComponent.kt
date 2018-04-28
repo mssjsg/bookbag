@@ -1,6 +1,7 @@
 package github.io.mssjsg.bookbag.main
 
 import dagger.Subcomponent
+import github.io.mssjsg.bookbag.list.ItemListViewModel
 import github.io.mssjsg.bookbag.util.viewmodel.ViewModelScope
 
 /**

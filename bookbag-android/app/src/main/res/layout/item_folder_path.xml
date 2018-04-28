@@ -6,7 +6,7 @@
     <data>
         <variable
             name="item"
-            type="github.io.mssjsg.bookbag.main.listitem.FolderPathItem"/>
+            type="github.io.mssjsg.bookbag.list.listitem.FolderPathItem"/>
     </data>
 
     <LinearLayout

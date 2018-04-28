@@ -26,6 +26,8 @@
                 <data android:mimeType="video/*" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".move.MoveActivity"/>
     </application>
 
 </manifest>

@@ -6,91 +6,52 @@ import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.DividerItemDecoration
-import android.support.v7.widget.LinearLayoutManager
 import android.view.*
-import github.io.mssjsg.bookbag.BookBagApplication
-import github.io.mssjsg.bookbag.BookBagAppComponent
+import github.io.mssjsg.bookbag.BookbagActivity
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.databinding.ActivityMainBinding
+import github.io.mssjsg.bookbag.list.*
+import github.io.mssjsg.bookbag.move.MoveActivity
 import github.io.mssjsg.bookbag.util.getSharedUrl
 import github.io.mssjsg.bookbag.util.viewmodel.ViewModelFactory
 import github.io.mssjsg.bookbag.widget.SimpleInputDialogFragment
 
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var viewModel: MainViewModel
-    private lateinit var mainBinding: ActivityMainBinding
-    private lateinit var mainListAdapter: MainListAdapter
-    private lateinit var pathListAdapter: PathListAdapter
-
-    private lateinit var actionModeCallback: ActionModeCallback
-
+class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback, ItemListViewModelProvider {
     companion object {
         private const val REQUEST_ID_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.REQUEST_ID_CREATE_NEW_FOLDER"
         private const val TAG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.TAG_CREATE_NEW_FOLDER"
     }
 
+    private var actionMode: ActionMode? = null
+    private lateinit var mainBinding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
-        actionModeCallback = ActionModeCallback()
-
-        //init view model
-        viewModel = ViewModelProviders.of(this, ViewModelFactory(getAppComponent()))
-                .get(MainViewModel::class.java)
-
-        viewModel.liveBus.let {
+        viewModel.localLiveBus.let {
             //init event
             it.subscribe(this, Observer {
-                startActionMode(actionModeCallback)
-                viewModel.setSelected(it!!.position, true)
+                actionMode = startActionMode(this)
             }, ItemLongClickEvent::class)
+        }
 
+        viewModel.liveBus.let {
             it.subscribe(this, Observer {
-                if (viewModel.isInActionMode) {
-                    it?.let { viewModel.toggleSelected(it.position) }
-                } else {
-                    //TODO go to url
+                it?.apply {
+                    when(requestId) {
+                        REQUEST_ID_CREATE_NEW_FOLDER -> viewModel.addFolder(Folder(name = input))
+                    }
                 }
-            }, ItemClickEvent::class)
-
-            it.subscribe(this, Observer {
-                it?.apply { viewModel.addFolder(Folder(name = input)) }
             }, SimpleInputDialogFragment.ConfirmEvent::class)
         }
-
-        //init adapter
-        mainListAdapter = MainListAdapter(viewModel)
-        pathListAdapter = PathListAdapter(viewModel)
-
-        //init bind views
-        mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        mainBinding.viewmodel = viewModel
-        mainBinding.bookmarksList.adapter = mainListAdapter
-        mainBinding.bookmarksList.addItemDecoration(DividerItemDecoration(this, LinearLayoutManager.VERTICAL))
-        mainBinding.pathsList.adapter = pathListAdapter
-
-        detectNewUrl(intent)
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        detectNewUrl(intent)
-    }
-
-    private fun getAppComponent(): BookBagAppComponent {
-        return (application as BookBagApplication).appComponent
-    }
-
-    private fun detectNewUrl(intent: Intent?) {
-        val newUrl = intent?.getSharedUrl()
-        if (!newUrl.isNullOrBlank()) {
-            viewModel.addBookmark(Bookmark(url = newUrl ?: ""))
-        }
+    override fun onCreateViewModel(): MainViewModel {
+        return ViewModelProviders.of(this, ViewModelFactory(getAppComponent()))
+                .get(MainViewModel::class.java)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -113,33 +74,51 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    private inner class ActionModeCallback : ActionMode.Callback {
-        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-            when (item?.itemId) {
-                R.id.menu_delete -> {
-                    viewModel.deleteSelectedItems()
-                    mode?.finish()
-                    true
-                }
-                else -> false
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        detectNewUrl(intent)
+    }
+
+    override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            R.id.item_delete -> {
+                viewModel.deleteSelectedItems()
+                mode?.finish()
+                true
             }
-
-            return false
+            R.id.item_move -> {
+                val intent = Intent(this, MoveActivity::class.java)
+                intent.putExtra(EXTRA_FOLDER_ID, viewModel.currentFolderId)
+                startActivity(intent)
+            }
+            else -> false
         }
 
-        override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            mode?.menuInflater?.inflate(R.menu.menu_main_action_mode, menu)
-            return true
-        }
+        return false
+    }
 
-        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            viewModel.isInActionMode = true
-            return false
-        }
+    override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+        mode?.menuInflater?.inflate(R.menu.menu_main_action_mode, menu)
+        return true
+    }
 
-        override fun onDestroyActionMode(mode: ActionMode?) {
-            viewModel.isInActionMode = false
-        }
+    override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+        viewModel.isInActionMode = true
+        return false
+    }
 
+    override fun onDestroyActionMode(mode: ActionMode?) {
+        viewModel.isInActionMode = false
+    }
+
+    override fun getItemListViewModel(): ItemListViewModel {
+        return viewModel
+    }
+
+    private fun detectNewUrl(intent: Intent?) {
+        val newUrl = intent?.getSharedUrl()
+        if (!newUrl.isNullOrBlank()) {
+            viewModel.addBookmark(Bookmark(url = newUrl ?: ""))
+        }
     }
 }

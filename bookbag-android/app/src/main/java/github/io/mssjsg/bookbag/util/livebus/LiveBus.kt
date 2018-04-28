@@ -12,11 +12,14 @@ import kotlin.reflect.full.cast
  * Created by Sing on 30/3/2018.
  */
 @Singleton
-class LiveBus @Inject constructor() {
+open class LiveBus @Inject constructor() {
 
     private val bus: MutableLiveData<LiveEvent> = MutableLiveData<LiveEvent>()
 
     fun <T: LiveEvent> subscribe(owner: LifecycleOwner, observer: Observer<T>, kClass: KClass<T>) {
+        if (bus.value != null) {
+            bus.value = null
+        }
         bus.observe(owner, Observer {
             if (kClass.isInstance(it)) observer.onChanged(kClass.cast(it))
         })

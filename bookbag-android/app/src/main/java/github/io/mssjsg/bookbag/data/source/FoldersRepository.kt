@@ -7,6 +7,10 @@ import io.reactivex.Flowable
  * Created by Sing on 27/3/2018.
  */
 class FoldersRepository(val localDataSource: FoldersDataSource): FoldersDataSource {
+    override fun moveFolder(folderId: Int, parentFolderId: Int?) {
+        localDataSource.moveFolder(folderId, parentFolderId)
+    }
+
     override fun getCurrentFolder(folderId: Int): Flowable<Folder> {
         return localDataSource.getCurrentFolder(folderId)
     }

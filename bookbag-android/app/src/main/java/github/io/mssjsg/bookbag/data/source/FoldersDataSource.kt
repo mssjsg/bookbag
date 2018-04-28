@@ -15,5 +15,7 @@ interface FoldersDataSource {
 
     fun updateFolder(folder: Folder)
 
+    fun moveFolder(folderId: Int, parentFolderId: Int?)
+
     fun deleteFolders(folderIds: List<Int>)
 }

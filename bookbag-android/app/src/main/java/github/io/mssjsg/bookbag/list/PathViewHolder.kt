@@ -1,11 +1,11 @@
-package github.io.mssjsg.bookbag.main
+package github.io.mssjsg.bookbag.list
 
 import android.support.v7.widget.RecyclerView
 import github.io.mssjsg.bookbag.databinding.ItemFolderPathBinding
-import github.io.mssjsg.bookbag.main.listitem.FolderPathItem
-import github.io.mssjsg.bookbag.util.livebus.LiveBus
+import github.io.mssjsg.bookbag.list.listitem.FolderPathItem
+import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 
-class PathViewHolder(private val liveBus: LiveBus, private val itemFolderPathBinding: ItemFolderPathBinding): RecyclerView.ViewHolder(itemFolderPathBinding.root) {
+class PathViewHolder(private val localLiveBus: LocalLiveBus, private val itemFolderPathBinding: ItemFolderPathBinding): RecyclerView.ViewHolder(itemFolderPathBinding.root) {
     var folderPathItem: FolderPathItem? = null
         set(value) {
             field = value
