@@ -177,7 +177,7 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
     private fun detectNewUrl(intent: Intent?) {
         val newUrl = intent?.getSharedUrl()
         if (!newUrl.isNullOrBlank()) {
-            viewModel.addBookmark(Bookmark(url = newUrl ?: ""))
+            viewModel.addBookmark(Bookmark(url = newUrl ?: "", folderId = viewModel.currentFolderId))
         }
     }
 }
