@@ -2,8 +2,6 @@ package github.io.mssjsg.bookbag
 
 import dagger.Component
 import github.io.mssjsg.bookbag.data.DataModule
-import github.io.mssjsg.bookbag.list.ItemListComponent
-import github.io.mssjsg.bookbag.main.MainComponent
 import github.io.mssjsg.bookbag.util.UtilModule
 import github.io.mssjsg.bookbag.util.executor.ExecutorModule
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
@@ -18,9 +16,7 @@ interface BookBagAppComponent {
 
     fun inject(bookBagApplication: BookBagApplication)
 
-    fun mainComponent(): MainComponent
-
-    fun itemListComponent(): ItemListComponent
+    fun viewModelComponent(): ViewModelComponent
 
     fun provideLiveBus(): LiveBus
 }

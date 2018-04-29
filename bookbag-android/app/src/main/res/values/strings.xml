@@ -10,4 +10,5 @@
     <string name="title_new_folder">New Folder</string>
     <string name="path_home">Home</string>
     <string name="title_move_to">Move to...</string>
+    <string name="confirm_exit">Exit now?</string>
 </resources>

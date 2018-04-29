@@ -3,6 +3,7 @@ package github.io.mssjsg.bookbag.list
 import android.arch.lifecycle.AndroidViewModel
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
+import android.support.v4.util.ArraySet
 import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.data.Bookmark
@@ -40,18 +41,22 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         const val ITEM_VIEW_TYPE_FOLDER = 1
     }
 
-    var isInActionMode = false
+    var isInMultiSelectionMode = false
         set(value) {
             field = value
             if (!value) {
-                for (listItem: ListItem in items) {
-                    listItem.isSelected = false
+                for (i in items.indices) {
+                    items.get(i).let {
+                        if (it.isSelected) {
+                            it.isSelected = false
+                            items.set(i, it)
+                        }
+                    }
                 }
             }
         }
 
     var currentFolderId: Int? = null
-        private set
 
     val items: ObservableList<ListItem> = ObservableArrayList()
 
@@ -62,6 +67,8 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     private lateinit var listItemsDisposable: Disposable
     private lateinit var folderPathItemsDisposable: Disposable
     private lateinit var currentFolder: Folder
+
+    lateinit var filteredFolders: IntArray
 
     fun loadCurrentFolder() {
         items.clear()
@@ -91,8 +98,13 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         }, foldersRepository.getFolders(currentFolderId).map {
             val items: MutableList<ListItem> = ArrayList()
             for (folder: Folder in it) {
-                items.add(FolderListItem(folder.name, folderId = folder.folderId ?: -1,
-                        parentFolderId = folder.parentFolderId))
+                val item = FolderListItem(folder.name, folderId = folder.folderId ?: -1,
+                        parentFolderId = folder.parentFolderId)
+                folder.folderId?.let {
+                    item.isFiltered = filteredFolders.contains(it)
+                }
+
+                items.add(item)
             }
             items
         }, BiFunction<List<ListItem>, List<ListItem>, List<ListItem>> { bookmarks, folders ->
@@ -119,7 +131,9 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     private fun getFolders(folderId: Int?, folderPathItems: MutableList<Folder> = ArrayList()): Single<List<Folder>> {
         folderId?.let {
             return foldersRepository.getCurrentFolder(it).firstOrError().doAfterSuccess {
-                currentFolder = it
+                if (it.folderId == currentFolderId) {
+                    currentFolder = it
+                }
             }.flatMap {
                 folderPathItems.add(0, it)
                 getFolders(it.parentFolderId, folderPathItems)
@@ -154,8 +168,8 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         bookmarksRepository.saveBookmark(bookmark)
     }
 
-    fun addFolder(folder: Folder) {
-        foldersRepository.saveFolder(folder)
+    fun addFolder(folderName: String) {
+        foldersRepository.saveFolder(Folder(name = folderName, parentFolderId = currentFolderId))
     }
 
     fun deleteSelectedItems() {
@@ -196,6 +210,20 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     fun loadFolder(folderId: Int?) {
         currentFolderId = folderId
         loadCurrentFolder()
+    }
+
+    fun getSelectedFolderIds(): List<Int> {
+        val selectedFolderIds =  ArrayList<Int>()
+        for (listItem in items) {
+            if (listItem.isSelected) {
+                when(listItem) {
+                    is FolderListItem -> {
+                        selectedFolderIds.add(listItem.folderId)
+                    }
+                }
+            }
+        }
+        return selectedFolderIds
     }
 
     fun moveSelectedItems(targetFolderId: Int?) {

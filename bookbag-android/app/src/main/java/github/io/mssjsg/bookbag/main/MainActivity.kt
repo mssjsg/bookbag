@@ -1,27 +1,34 @@
 package github.io.mssjsg.bookbag.main
 
+import android.app.Activity
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.databinding.DataBindingUtil
+import android.net.Uri
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.view.*
-import github.io.mssjsg.bookbag.BookbagActivity
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.data.Bookmark
-import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.databinding.ActivityMainBinding
 import github.io.mssjsg.bookbag.list.*
-import github.io.mssjsg.bookbag.move.MoveActivity
+import github.io.mssjsg.bookbag.folderselection.FolderSelectionActivity
+import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
+import github.io.mssjsg.bookbag.util.getFolderId
 import github.io.mssjsg.bookbag.util.getSharedUrl
+import github.io.mssjsg.bookbag.util.putFilteredFolderIds
+import github.io.mssjsg.bookbag.util.putFolderId
 import github.io.mssjsg.bookbag.util.viewmodel.ViewModelFactory
+import github.io.mssjsg.bookbag.widget.SimpleConfirmDialogFragment
 import github.io.mssjsg.bookbag.widget.SimpleInputDialogFragment
 
-class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback, ItemListViewModelProvider {
+class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
     companion object {
-        private const val REQUEST_ID_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.REQUEST_ID_CREATE_NEW_FOLDER"
+        private const val CONFIRM_DIALOG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_CREATE_NEW_FOLDER"
+        private const val CONFIRM_DIALOG_EXIT = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_EXIT"
         private const val TAG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.TAG_CREATE_NEW_FOLDER"
+        private const val TAG_EXIT = "github.io.mssjsg.bookbag.main.TAG_EXIT"
+        private const val REQUEST_ID_MOVE_ITEMS = 1000
     }
 
     private var actionMode: ActionMode? = null
@@ -36,16 +43,44 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback, Ite
             it.subscribe(this, Observer {
                 actionMode = startActionMode(this)
             }, ItemLongClickEvent::class)
+
+            it.subscribe(this, Observer {
+                it?.let { onItemSelected(it.position) }
+            }, ItemClickEvent::class)
         }
 
         viewModel.liveBus.let {
             it.subscribe(this, Observer {
                 it?.apply {
                     when(requestId) {
-                        REQUEST_ID_CREATE_NEW_FOLDER -> viewModel.addFolder(Folder(name = input))
+                        CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.addFolder(input)
                     }
                 }
             }, SimpleInputDialogFragment.ConfirmEvent::class)
+
+            it.subscribe(this, Observer {
+                it?.apply {
+                    when(requestId) {
+                        CONFIRM_DIALOG_EXIT -> finish()
+                    }
+                }
+            }, SimpleConfirmDialogFragment.ConfirmEvent::class)
+        }
+
+        detectNewUrl(intent)
+    }
+
+    fun onItemSelected(position: Int) {
+        if (!viewModel.isInMultiSelectionMode) {
+            viewModel.getListItem(position).let {
+                when (it) {
+                    is BookmarkListItem -> {
+                        val i = Intent(Intent.ACTION_VIEW)
+                        i.data = Uri.parse(it.url)
+                        startActivity(i)
+                    }
+                }
+            }
         }
     }
 
@@ -63,7 +98,7 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback, Ite
         item?.apply {
             when(itemId) {
                 R.id.item_new_folder -> {
-                    SimpleInputDialogFragment.newInstance(REQUEST_ID_CREATE_NEW_FOLDER,
+                    SimpleInputDialogFragment.newInstance(CONFIRM_DIALOG_CREATE_NEW_FOLDER,
                             hint = getString(R.string.hint_folder_name),
                             title = getString(R.string.title_new_folder))
                             .show(supportFragmentManager, TAG_CREATE_NEW_FOLDER)
@@ -87,14 +122,32 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback, Ite
                 true
             }
             R.id.item_move -> {
-                val intent = Intent(this, MoveActivity::class.java)
-                intent.putExtra(EXTRA_FOLDER_ID, viewModel.currentFolderId)
-                startActivity(intent)
+                val intent = Intent(this, FolderSelectionActivity::class.java)
+                intent.putFolderId(viewModel.currentFolderId)
+                intent.putFilteredFolderIds(viewModel.getSelectedFolderIds().toIntArray())
+                startActivityForResult(intent, REQUEST_ID_MOVE_ITEMS)
             }
             else -> false
         }
 
         return false
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(resultCode == Activity.RESULT_OK) {
+            when (requestCode) {
+                REQUEST_ID_MOVE_ITEMS -> {
+                    data?.let {
+                        val folderId = data.getFolderId()
+                        viewModel.moveSelectedItems(folderId)
+                        viewModel.loadFolder(folderId)
+                    }
+                }
+            }
+        }
+
+        actionMode?.finish()
     }
 
     override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
@@ -103,16 +156,22 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback, Ite
     }
 
     override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-        viewModel.isInActionMode = true
+        viewModel.isInMultiSelectionMode = true
         return false
     }
 
     override fun onDestroyActionMode(mode: ActionMode?) {
-        viewModel.isInActionMode = false
+        viewModel.isInMultiSelectionMode = false
     }
 
-    override fun getItemListViewModel(): ItemListViewModel {
-        return viewModel
+    override fun onBackPressed() {
+        if(viewModel.currentFolderId == null) {
+            SimpleConfirmDialogFragment.newInstance(CONFIRM_DIALOG_EXIT,
+                    title = getString(R.string.confirm_exit))
+                    .show(supportFragmentManager, TAG_EXIT)
+        } else {
+            viewModel.loadParentFolder()
+        }
     }
 
     private fun detectNewUrl(intent: Intent?) {

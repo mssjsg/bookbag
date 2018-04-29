@@ -5,6 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="item"
             type="github.io.mssjsg.bookbag.list.listitem.FolderListItem"/>
@@ -16,29 +17,30 @@
         android:background="@{item.isSelected ? @drawable/background_selected : @drawable/background_normal }">
 
         <TextView
-            style="@style/TextAppearance.AppCompat.Headline"
             android:id="@+id/name"
+            style="@style/TextAppearance.AppCompat.Headline"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toStartOf="@+id/thumbnail"
-            app:layout_constraintStart_toStartOf="parent"
-            android:paddingHorizontal="?attr/listPreferredItemPaddingLeft"
-            android:paddingVertical="?attr/listPreferredItemPaddingLeft"
-            android:text="@{item.name}"
-            android:singleLine="true"
             android:ellipsize="end"
             android:lines="1"
+            android:paddingHorizontal="?attr/listPreferredItemPaddingLeft"
+            android:paddingVertical="?attr/listPreferredItemPaddingLeft"
+            android:singleLine="true"
+            android:text="@{item.name}"
+            android:textColor="@{item.isFiltered ? @color/colorTextFiltered : @color/colorText}"
+            app:layout_constraintEnd_toStartOf="@+id/thumbnail"
+            app:layout_constraintStart_toStartOf="parent"
             tools:text="testing"/>
 
         <ImageView
             android:id="@+id/thumbnail"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:paddingHorizontal="?attr/listPreferredItemPaddingLeft"
             android:src="@drawable/ic_folder"
-            android:paddingHorizontal="?attr/listPreferredItemPaddingLeft"/>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
 
     </android.support.constraint.ConstraintLayout>
 

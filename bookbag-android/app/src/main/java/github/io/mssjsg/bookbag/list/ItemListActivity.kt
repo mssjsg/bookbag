@@ -1,45 +1,27 @@
 package github.io.mssjsg.bookbag.list
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import github.io.mssjsg.bookbag.BookbagActivity
 import github.io.mssjsg.bookbag.R
-import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
-import github.io.mssjsg.bookbag.list.listitem.FolderListItem
-import github.io.mssjsg.bookbag.move.MoveActivity
+import github.io.mssjsg.bookbag.folderselection.FolderSelectionActivity
+import github.io.mssjsg.bookbag.util.getFilteredFolderIds
+import github.io.mssjsg.bookbag.util.getFolderId
 
-abstract class ItemListActivity<VM: ItemListViewModel> : BookbagActivity() {
-    companion object {
-        const val EXTRA_FOLDER_ID = "github.io.mssjsg.bookbag.main.EXTRA_FOLDER_ID"
-    }
-
+abstract class ItemListActivity<VM: ItemListViewModel> : BookbagActivity(), ItemListViewModelProvider {
     protected lateinit var viewModel: VM
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = onCreateViewModel()
+        viewModel.filteredFolders = intent.getFilteredFolderIds()
+        viewModel.currentFolderId = intent.getFolderId()
+        onViewModelCreated(viewModel)
         addItemListFragment()
     }
 
     protected abstract fun onCreateViewModel(): VM
 
-    fun onItemSelected(position: Int) {
-        if (viewModel.isInActionMode) {
-            viewModel.toggleSelected(position)
-        } else {
-            viewModel.getListItem(position).let { when(it) {
-                is BookmarkListItem -> {
-                    val i = Intent(Intent.ACTION_VIEW)
-                    i.data = Uri.parse(it.url)
-                    startActivity(i)
-                }
-                is FolderListItem -> {
-                    viewModel.loadFolder(it.folderId)
-                }
-            }}
-        }
-    }
+    open protected fun onViewModelCreated(viewModel: VM) {}
 
     override fun onBackPressed() {
         if(viewModel.currentFolderId == null) {
@@ -50,15 +32,18 @@ abstract class ItemListActivity<VM: ItemListViewModel> : BookbagActivity() {
     }
 
     protected fun getItemListFragment(): ItemListFragment {
-        return supportFragmentManager.findFragmentByTag(MoveActivity.TAG_ITEM_LIST) as ItemListFragment
+        return supportFragmentManager.findFragmentByTag(FolderSelectionActivity.TAG_ITEM_LIST) as ItemListFragment
     }
 
     private fun addItemListFragment() {
-        if (!(supportFragmentManager.findFragmentByTag(MoveActivity.TAG_ITEM_LIST) is ItemListFragment)) {
+        if (!(supportFragmentManager.findFragmentByTag(FolderSelectionActivity.TAG_ITEM_LIST) is ItemListFragment)) {
             supportFragmentManager.beginTransaction()
-                    .add(R.id.list_container, ItemListFragment.newInstance(), MoveActivity.TAG_ITEM_LIST)
+                    .add(R.id.list_container, ItemListFragment.newInstance(), FolderSelectionActivity.TAG_ITEM_LIST)
                     .commit()
         }
     }
 
+    override fun getItemListViewModel(): ItemListViewModel {
+        return viewModel
+    }
 }

@@ -1,32 +1,33 @@
-package github.io.mssjsg.bookbag.move
+package github.io.mssjsg.bookbag.folderselection
 
 import android.arch.lifecycle.ViewModelProviders
+import android.content.Intent
+import android.databinding.DataBindingUtil
 import android.os.Bundle
-import android.view.ActionMode
 import android.view.Menu
 import android.view.MenuItem
-import github.io.mssjsg.bookbag.BookbagActivity
 import github.io.mssjsg.bookbag.R
+import github.io.mssjsg.bookbag.databinding.ActivityMainBinding
 import github.io.mssjsg.bookbag.list.ItemListActivity
-import github.io.mssjsg.bookbag.list.ItemListFragment
-import github.io.mssjsg.bookbag.list.MoveSelectedItemsEvent
-import github.io.mssjsg.bookbag.main.MainViewModel
+import github.io.mssjsg.bookbag.util.putFolderId
 import github.io.mssjsg.bookbag.util.viewmodel.ViewModelFactory
 
-class MoveActivity: ItemListActivity<MoveViewModel>() {
+class FolderSelectionActivity: ItemListActivity<FolderSelectionViewModel>() {
     companion object {
         const val TAG_ITEM_LIST = "github.io.mssjsg.bookbag.move.TAG_ITEM_LIST"
     }
 
-    private var actionMode: ActionMode? = null
+    private lateinit var mainBinding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        viewModel = ViewModelProviders.of(this, ViewModelFactory(getAppComponent()))
-                .get(MoveViewModel::class.java)
-
+        mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         supportActionBar?.title = getString(R.string.title_move_to)
+    }
+
+    override fun onViewModelCreated(viewModel: FolderSelectionViewModel) {
+        super.onViewModelCreated(viewModel)
+        viewModel.isShowingBookmarks = false
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -38,7 +39,9 @@ class MoveActivity: ItemListActivity<MoveViewModel>() {
         item?.apply {
             when(itemId) {
                 R.id.item_confirm_folder_selection -> {
-                    viewModel.liveBus.post(MoveSelectedItemsEvent(getItemListFragment().currentFolderId))
+                    val intent = Intent()
+                    intent.putFolderId(viewModel.currentFolderId)
+                    setResult(RESULT_OK, intent)
                     finish()
                 }
             }
@@ -47,8 +50,8 @@ class MoveActivity: ItemListActivity<MoveViewModel>() {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onCreateViewModel(): MoveViewModel {
+    override fun onCreateViewModel(): FolderSelectionViewModel {
         return ViewModelProviders.of(this, ViewModelFactory(getAppComponent()))
-                .get(MoveViewModel::class.java)
+                .get(FolderSelectionViewModel::class.java)
     }
 }

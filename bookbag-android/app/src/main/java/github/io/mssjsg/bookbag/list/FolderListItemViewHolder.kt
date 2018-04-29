@@ -19,7 +19,11 @@ class FolderListItemViewHolder(private val localLive: LocalLiveBus, private val 
         }
 
     init {
-        itemFolderBinding.root.setOnClickListener { localLive.post(ItemClickEvent(adapterPosition)) }
+        itemFolderBinding.root.setOnClickListener {
+            if (listItem?.isFiltered == false) {
+                localLive.post(ItemClickEvent(adapterPosition))
+            }
+        }
         itemFolderBinding.root.setOnLongClickListener { localLive.post(ItemLongClickEvent(adapterPosition)); true }
     }
 }
