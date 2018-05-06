@@ -3,6 +3,7 @@ package github.io.mssjsg.bookbag.main
 import android.databinding.BindingAdapter
 import android.support.v7.widget.RecyclerView
 import android.widget.ImageView
+import github.io.mssjsg.bookbag.GlideApp
 import github.io.mssjsg.bookbag.list.listitem.FolderPathItem
 import github.io.mssjsg.bookbag.list.listitem.ListItem
 
@@ -18,8 +19,8 @@ object MainBindings {
 
     @JvmStatic
     @BindingAdapter("imageUrl")
-    fun setImageUrl(view: ImageView, url: String) {
-        //TODO
+    fun setImageUrl(view: ImageView, url: String?) {
+        GlideApp.with(view).load(url).centerCrop().into(view)
     }
 
     @JvmStatic

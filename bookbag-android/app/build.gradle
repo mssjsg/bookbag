@@ -82,4 +82,11 @@ dependencies {
 
     //KTX
     implementation 'androidx.core:core-ktx:0.3'
+
+    //Jsoup
+    implementation 'org.jsoup:jsoup:1.10.2'
+
+    //glide
+    implementation 'com.github.bumptech.glide:glide:4.7.1'
+    kapt 'com.github.bumptech.glide:compiler:4.7.1'
 }

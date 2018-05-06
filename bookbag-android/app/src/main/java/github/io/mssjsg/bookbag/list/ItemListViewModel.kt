@@ -3,7 +3,6 @@ package github.io.mssjsg.bookbag.list
 import android.arch.lifecycle.AndroidViewModel
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
-import android.support.v4.util.ArraySet
 import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.data.Bookmark
@@ -14,13 +13,18 @@ import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderPathItem
 import github.io.mssjsg.bookbag.list.listitem.ListItem
+import github.io.mssjsg.bookbag.util.linkpreview.JsoupWebPageCrawler
+import github.io.mssjsg.bookbag.util.linkpreview.LinkPreviewException
+import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
+import github.io.mssjsg.bookbag.util.linkpreview.UrlPreviewManager
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 import github.io.mssjsg.bookbag.util.viewmodel.ViewModelScope
 import io.reactivex.Flowable
+import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
@@ -33,7 +37,8 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                                             val bookmarksRepository: BookmarksRepository,
                                             val foldersRepository: FoldersRepository,
                                             val liveBus: LiveBus,
-                                            val localLiveBus: LocalLiveBus) : AndroidViewModel(application) {
+                                            val localLiveBus: LocalLiveBus,
+                                                 val urlPreviewManager: UrlPreviewManager) : AndroidViewModel(application) {
 
     companion object {
         const val ITEM_VIEW_TYPE_UNKNOWN = -1
@@ -64,39 +69,61 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
 
     var isShowingBookmarks: Boolean = true
 
-    private lateinit var listItemsDisposable: Disposable
-    private lateinit var folderPathItemsDisposable: Disposable
+    private lateinit var disposables: CompositeDisposable
+
     private lateinit var currentFolder: Folder
 
     lateinit var filteredFolders: IntArray
+
+    fun loadPreview(bookmarkListItem: BookmarkListItem) {
+        disposables.add(Observable.fromCallable({
+            var previewUrl = ""
+            var title = bookmarkListItem.name
+            try {
+                val item = urlPreviewManager.get(bookmarkListItem.url)
+                previewUrl = item.previewUrl
+                title = item.title
+            } catch (e: LinkPreviewException) { }
+            val bookmark = Bookmark(bookmarkListItem.url, bookmarkListItem.parentFolderId,
+                    title, previewUrl)
+            bookmarksRepository.saveBookmark(bookmark)
+            bookmark
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe({}, {}))
+    }
 
     fun loadCurrentFolder() {
         items.clear()
         paths.clear()
 
-        if (::listItemsDisposable.isInitialized) {
-            listItemsDisposable.dispose()
+        if (::disposables.isInitialized) {
+            disposables.dispose()
         }
 
-        if (::folderPathItemsDisposable.isInitialized) {
-            folderPathItemsDisposable.dispose()
-        }
+        disposables = CompositeDisposable()
 
-        listItemsDisposable = Flowable.combineLatest(Flowable.just(isShowingBookmarks).flatMap {
+        disposables.add(Flowable.combineLatest(Flowable.just(isShowingBookmarks).flatMap {
             isShowingBookmarks ->
             if (isShowingBookmarks) {
                 bookmarksRepository.getBookmarks(currentFolderId).map {
-                    val items: MutableList<ListItem> = ArrayList()
+                    val items = arrayListOf<BookmarkListItem>()
                     for (bookmark: Bookmark in it) {
-                        items.add(BookmarkListItem(bookmark.name, bookmark.url, bookmark.folderId))
+                        val bookmarkListItem = BookmarkListItem(bookmark.name, bookmark.url,
+                                bookmark.folderId, bookmark.imageUrl)
+                        items.add(bookmarkListItem)
                     }
                     items
                 }
             } else {
                 Flowable.just(ArrayList())
             }
-        }, foldersRepository.getFolders(currentFolderId).map {
-            val items: MutableList<ListItem> = ArrayList()
+        }.doOnNext({
+            for (bookmarkListItem in it) {
+                if(bookmarkListItem.imageUrl == null) {
+                    loadPreview(bookmarkListItem)
+                }
+            }
+        }), foldersRepository.getFolders(currentFolderId).map {
+            val items = arrayListOf<FolderListItem>()
             for (folder: Folder in it) {
                 val item = FolderListItem(folder.name, folderId = folder.folderId ?: -1,
                         parentFolderId = folder.parentFolderId)
@@ -115,9 +142,9 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe { listItems ->
             items.clear()
             items.addAll(listItems)
-        }
+        })
 
-        folderPathItemsDisposable = getFolders(currentFolderId).map {
+        disposables.add(getFolders(currentFolderId).map {
             it.map {
                 FolderPathItem(it.name, it.folderId)
             }
@@ -125,7 +152,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
             folderPathItems ->
             paths.clear()
             paths.addAll(folderPathItems)
-        }
+        })
     }
 
     private fun getFolders(folderId: Int?, folderPathItems: MutableList<Folder> = ArrayList()): Single<List<Folder>> {
@@ -164,8 +191,14 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         }
     }
 
-    fun addBookmark(bookmark: Bookmark) {
-        bookmarksRepository.saveBookmark(bookmark)
+    fun addBookmark(url: String) {
+        val urls = SearchUrls.matches(url)
+        if (urls.size > 0) {
+            val detectedUrl = JsoupWebPageCrawler.extendedTrim(urls.get(0))
+            if (detectedUrl.isNotEmpty()) {
+                bookmarksRepository.saveBookmark(Bookmark(detectedUrl, currentFolderId))
+            }
+        }
     }
 
     fun addFolder(folderName: String) {
@@ -199,12 +232,13 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
 
     override fun onCleared() {
         super.onCleared()
-        listItemsDisposable.dispose()
-        folderPathItemsDisposable.dispose()
+        disposables.dispose()
     }
 
     fun loadParentFolder() {
-        loadFolder(currentFolder.parentFolderId)
+        if (::currentFolder.isInitialized) {
+            loadFolder(currentFolder.parentFolderId)
+        }
     }
 
     fun loadFolder(folderId: Int?) {

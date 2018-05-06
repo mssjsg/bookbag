@@ -12,7 +12,7 @@ interface BookmarksDao {
     @Query("SELECT * FROM bookmarks WHERE folder_id IS NULL")
     fun getHomeBookmarks(): Flowable<List<Bookmark>>
 
-    @Query("SELECT * FROM bookmarks WHERE folder_id = :folderId")
+    @Query("SELECT * FROM bookmarks WHERE folder_id = :folderId ORDER BY create_date DESC")
     fun getBookmarksByFolderId(folderId: Int): Flowable<List<Bookmark>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
