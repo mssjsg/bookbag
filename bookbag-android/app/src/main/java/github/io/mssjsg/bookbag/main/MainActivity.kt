@@ -2,14 +2,16 @@ package github.io.mssjsg.bookbag.main
 
 import android.app.Activity
 import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.net.Uri
 import android.os.Bundle
 import android.view.*
+import github.io.mssjsg.bookbag.BookBagAppComponent
 import github.io.mssjsg.bookbag.R
-import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.databinding.ActivityMainBinding
 import github.io.mssjsg.bookbag.list.*
 import github.io.mssjsg.bookbag.folderselection.FolderSelectionActivity
@@ -18,7 +20,6 @@ import github.io.mssjsg.bookbag.util.getFolderId
 import github.io.mssjsg.bookbag.util.getSharedUrl
 import github.io.mssjsg.bookbag.util.putFilteredFolderIds
 import github.io.mssjsg.bookbag.util.putFolderId
-import github.io.mssjsg.bookbag.util.viewmodel.ViewModelFactory
 import github.io.mssjsg.bookbag.widget.SimpleConfirmDialogFragment
 import github.io.mssjsg.bookbag.widget.SimpleInputDialogFragment
 
@@ -179,5 +180,14 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
     private fun detectNewUrl(intent: Intent?) {
         val newUrl = intent?.getSharedUrl()
         newUrl?.let { viewModel.addBookmark(newUrl) }
+    }
+
+    private class ViewModelFactory(val viewModelComponent: BookBagAppComponent): ViewModelProvider.NewInstanceFactory() {
+
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            return viewModelComponent.mainComponent().let {
+                it.provideMainViewModel().apply { this.mainComponent = mainComponent } as T
+            }
+        }
     }
 }

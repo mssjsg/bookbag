@@ -14,4 +14,6 @@ class MainViewModel @Inject constructor(application: BookBagApplication,
                                         foldersRepository: FoldersRepository,
                                         liveBus: LiveBus,
                                         localLiveBus: LocalLiveBus, urlPreviewManager: UrlPreviewManager) : ItemListViewModel(application,
-        bookmarksRepository, foldersRepository, liveBus, localLiveBus, urlPreviewManager)
+        bookmarksRepository, foldersRepository, liveBus, localLiveBus, urlPreviewManager) {
+    lateinit var mainComponent: MainComponent
+}

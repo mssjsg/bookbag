@@ -1,16 +1,18 @@
 package github.io.mssjsg.bookbag.folderselection
 
+import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import github.io.mssjsg.bookbag.BookBagAppComponent
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.databinding.ActivityMainBinding
 import github.io.mssjsg.bookbag.list.ItemListActivity
 import github.io.mssjsg.bookbag.util.putFolderId
-import github.io.mssjsg.bookbag.util.viewmodel.ViewModelFactory
 
 class FolderSelectionActivity: ItemListActivity<FolderSelectionViewModel>() {
     companion object {
@@ -53,5 +55,14 @@ class FolderSelectionActivity: ItemListActivity<FolderSelectionViewModel>() {
     override fun onCreateViewModel(): FolderSelectionViewModel {
         return ViewModelProviders.of(this, ViewModelFactory(getAppComponent()))
                 .get(FolderSelectionViewModel::class.java)
+    }
+
+    private class ViewModelFactory(val viewModelComponent: BookBagAppComponent): ViewModelProvider.NewInstanceFactory() {
+
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            return viewModelComponent.folderSelectionComponent().let {
+                it.provideFolderSelectionViewModel().apply { this.folderSelectionComponent = folderSelectionComponent } as T
+            }
+        }
     }
 }

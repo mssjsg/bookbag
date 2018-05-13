@@ -16,4 +16,6 @@ class FolderSelectionViewModel @Inject constructor(application: BookBagApplicati
                                                    localLiveBus: LocalLiveBus,
                                                    urlPreviewManager: UrlPreviewManager) : ItemListViewModel(application,
         bookmarksRepository, foldersRepository, liveBus, localLiveBus, urlPreviewManager) {
+
+    lateinit var folderSelectionComponent: FolderSelectionComponent
 }
