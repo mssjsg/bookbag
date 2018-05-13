@@ -67,6 +67,8 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
             }, SimpleConfirmDialogFragment.ConfirmEvent::class)
         }
 
+        viewModel.isInMultiSelectionMode = false
+
         detectNewUrl(intent)
     }
 

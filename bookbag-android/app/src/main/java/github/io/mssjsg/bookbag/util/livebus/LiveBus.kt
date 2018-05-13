@@ -14,18 +14,26 @@ import kotlin.reflect.full.cast
 @Singleton
 open class LiveBus @Inject constructor() {
 
-    private val bus: MutableLiveData<LiveEvent> = MutableLiveData<LiveEvent>()
+    private val bus: MutableLiveData<LiveEvent> = EventLiveData()
 
     fun <T: LiveEvent> subscribe(owner: LifecycleOwner, observer: Observer<T>, kClass: KClass<T>) {
-        if (bus.value != null) {
-            bus.value = null
-        }
         bus.observe(owner, Observer {
-            if (kClass.isInstance(it)) observer.onChanged(kClass.cast(it))
+            if (kClass.isInstance(it)) {
+                observer.onChanged(kClass.cast(it))
+            }
         })
     }
 
     fun post(liveEvent: LiveEvent) {
         bus.postValue(liveEvent)
+    }
+
+    companion object {
+        private class EventLiveData: MutableLiveData<LiveEvent>() {
+            override fun onInactive() {
+                super.onInactive()
+                value = null
+            }
+        }
     }
 }
