@@ -60,8 +60,8 @@ class FolderSelectionActivity: ItemListActivity<FolderSelectionViewModel>() {
     private class ViewModelFactory(val viewModelComponent: BookBagAppComponent): ViewModelProvider.NewInstanceFactory() {
 
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            return viewModelComponent.folderSelectionComponent().let {
-                it.provideFolderSelectionViewModel().apply { this.folderSelectionComponent = folderSelectionComponent } as T
+            return viewModelComponent.folderSelectionComponent().let { component ->
+                component.provideFolderSelectionViewModel().apply { this.folderSelectionComponent = component } as T
             }
         }
     }

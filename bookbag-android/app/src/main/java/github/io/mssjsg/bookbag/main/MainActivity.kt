@@ -48,6 +48,10 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
             it.subscribe(this, Observer {
                 it?.let { onItemSelected(it.position) }
             }, ItemClickEvent::class)
+
+            it.subscribe(this, Observer {
+                if (viewModel.selectedItemCount == 0) actionMode?.finish()
+            }, ItemToggleEvent::class)
         }
 
         viewModel.liveBus.let {
@@ -185,8 +189,8 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
     private class ViewModelFactory(val viewModelComponent: BookBagAppComponent): ViewModelProvider.NewInstanceFactory() {
 
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            return viewModelComponent.mainComponent().let {
-                it.provideMainViewModel().apply { this.mainComponent = mainComponent } as T
+            return viewModelComponent.mainComponent().let { component ->
+                component.provideMainViewModel().apply { mainComponent = component } as T
             }
         }
     }

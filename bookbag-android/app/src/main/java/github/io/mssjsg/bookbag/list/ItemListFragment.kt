@@ -75,6 +75,7 @@ class ItemListFragment : Fragment() {
     fun onItemSelected(position: Int) {
         if (viewModel.isInMultiSelectionMode) {
             viewModel.toggleSelected(position)
+            viewModel.localLiveBus.post(ItemToggleEvent(position))
         } else {
             viewModel.getListItem(position).let {
                 when (it) {

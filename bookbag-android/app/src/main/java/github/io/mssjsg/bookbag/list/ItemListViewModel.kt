@@ -62,18 +62,17 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         }
 
     var currentFolderId: Int? = null
-
     val items: ObservableList<ListItem> = ObservableArrayList()
-
     val paths: ObservableList<FolderPathItem> = ObservableArrayList()
-
     var isShowingBookmarks: Boolean = true
 
     private lateinit var disposables: CompositeDisposable
-
     private lateinit var currentFolder: Folder
-
     lateinit var filteredFolders: IntArray
+
+    var selectedItemCount: Int = 0
+        private set
+        get() = items.filter { it.isSelected }.size
 
     fun loadPreview(bookmarkListItem: BookmarkListItem) {
         disposables.add(Observable.fromCallable({
