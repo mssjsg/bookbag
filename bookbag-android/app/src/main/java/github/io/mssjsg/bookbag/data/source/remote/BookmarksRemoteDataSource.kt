@@ -17,11 +17,10 @@ class BookmarksRemoteDataSource @Inject constructor(firebaseDatabase: FirebaseDa
     }
 
     override fun saveBookmark(bookmark: Bookmark) {
-        val key = URLEncoder.encode(bookmark.url, "UTF-8").replace(".", "%2E")
-        rootReference.child(key).setValue(FirebaseBookmark.create(bookmark))
+        rootReference.child(getKey(bookmark.url)).setValue(FirebaseBookmark.create(bookmark))
     }
 
-    override fun moveBookmark(url: String, folderId: Int?) {
+    override fun moveBookmark(url: String, folderId: String?) {
         val databaseReference = rootReference.child(url)
         databaseReference.addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
@@ -45,15 +44,19 @@ class BookmarksRemoteDataSource @Inject constructor(firebaseDatabase: FirebaseDa
 
     override fun deleteBookmarks(bookmarkUrls: List<String>) {
         for (url in bookmarkUrls) {
-            rootReference.child(url).removeValue()
+            rootReference.child(getKey(url)).removeValue()
         }
     }
 
-    override fun getBookmarks(folderId: Int?): Flowable<List<Bookmark>> {
+    override fun getBookmarks(folderId: String?): Flowable<List<Bookmark>> {
         throw UnsupportedOperationException("not supported query bookmarks by folder id")
     }
 
     override fun getItemFromSnapshot(dataSnapshot: DataSnapshot): FirebaseBookmark? {
         return dataSnapshot.getValue(FirebaseBookmark::class.java)
+    }
+
+    private fun getKey(url: String): String {
+        return URLEncoder.encode(url, "UTF-8").replace(".", "%2E")
     }
 }

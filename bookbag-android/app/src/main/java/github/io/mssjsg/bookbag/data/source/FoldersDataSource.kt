@@ -7,9 +7,9 @@ import io.reactivex.Flowable
  * Created by Sing on 27/3/2018.
  */
 interface FoldersDataSource {
-    fun getFolders(folderId: Int? = null) : Flowable<List<Folder>>
+    fun getFolders(folderId: String? = null) : Flowable<List<Folder>>
 
-    fun getCurrentFolder(folderId: Int) : Flowable<Folder>
+    fun getCurrentFolder(folderId: String) : Flowable<Folder>
 
     fun getDirtyFolders(): Flowable<List<Folder>>
 
@@ -17,7 +17,7 @@ interface FoldersDataSource {
 
     fun updateFolder(folder: Folder)
 
-    fun moveFolder(folderId: Int, parentFolderId: Int?)
+    fun moveFolder(folderId: String, parentFolderId: String?)
 
-    fun deleteFolders(folderIds: List<Int>)
+    fun deleteFolders(folderIds: List<String>)
 }

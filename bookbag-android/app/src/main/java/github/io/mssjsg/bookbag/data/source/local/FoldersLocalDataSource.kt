@@ -2,6 +2,7 @@ package github.io.mssjsg.bookbag.data.source.local
 
 import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.data.source.FoldersDataSource
+import github.io.mssjsg.bookbag.util.ItemUidGenerator
 import github.io.mssjsg.bookbag.util.executor.qualifier.DiskIoExecutor
 import io.reactivex.Flowable
 import java.util.concurrent.Executor
@@ -10,22 +11,23 @@ import javax.inject.Inject
 /**
  * Created by Sing on 27/3/2018.
  */
-class FoldersLocalDataSource @Inject constructor(@DiskIoExecutor val executor: Executor, val foldersDao: FoldersDao) : FoldersDataSource {
+class FoldersLocalDataSource @Inject constructor(@DiskIoExecutor val executor: Executor,
+                                                 val foldersDao: FoldersDao) : FoldersDataSource {
     override fun getDirtyFolders(): Flowable<List<Folder>> {
         return foldersDao.getDirtyFolders()
     }
 
-    override fun moveFolder(folderId: Int, parentFolderId: Int?) {
+    override fun moveFolder(folderId: String, parentFolderId: String?) {
         executor.execute {
             foldersDao.moveFolder(folderId, parentFolderId)
         }
     }
 
-    override fun getCurrentFolder(folderId: Int): Flowable<Folder> {
+    override fun getCurrentFolder(folderId: String): Flowable<Folder> {
         return foldersDao.getCurrentFolderByFolderId(folderId)
     }
 
-    override fun getFolders(folderId: Int?): Flowable<List<Folder>> {
+    override fun getFolders(folderId: String?): Flowable<List<Folder>> {
         return folderId?.let {
             foldersDao.getFoldersByParentFolderId(folderId)
         } ?: foldersDao.getHomeFolders()
@@ -43,7 +45,7 @@ class FoldersLocalDataSource @Inject constructor(@DiskIoExecutor val executor: E
         }
     }
 
-    override fun deleteFolders(folderIds: List<Int>) {
+    override fun deleteFolders(folderIds: List<String>) {
         executor.execute {
             for (folderId in folderIds) {
                 foldersDao.deleteFolderByFolderId(folderId)

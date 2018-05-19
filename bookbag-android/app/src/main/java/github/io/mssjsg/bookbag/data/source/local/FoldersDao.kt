@@ -17,10 +17,10 @@ interface FoldersDao {
     fun getHomeFolders(): Flowable<List<Folder>>
 
     @Query("SELECT * FROM folders WHERE parent_folder_id = :folderId")
-    fun getFoldersByParentFolderId(folderId: Int): Flowable<List<Folder>>
+    fun getFoldersByParentFolderId(folderId: String): Flowable<List<Folder>>
 
     @Query("SELECT * FROM folders WHERE folder_id = :folderId")
-    fun getCurrentFolderByFolderId(folderId: Int): Flowable<Folder>
+    fun getCurrentFolderByFolderId(folderId: String): Flowable<Folder>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertFolder(folder: Folder)
@@ -29,8 +29,8 @@ interface FoldersDao {
     fun updateFolder(folder: Folder): Int
 
     @Query("DELETE FROM folders WHERE folder_id = :folderId OR parent_folder_id = :folderId")
-    fun deleteFolderByFolderId(folderId: Int)
+    fun deleteFolderByFolderId(folderId: String)
 
     @Query("UPDATE folders SET parent_folder_id = :parentFolderId AND dirty = 1 WHERE folder_id = :folderId")
-    fun moveFolder(folderId: Int, parentFolderId: Int?)
+    fun moveFolder(folderId: String, parentFolderId: String?)
 }

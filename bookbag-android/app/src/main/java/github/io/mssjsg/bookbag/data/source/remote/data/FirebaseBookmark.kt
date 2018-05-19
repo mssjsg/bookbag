@@ -5,9 +5,13 @@ import github.io.mssjsg.bookbag.data.Bookmark
 
 @IgnoreExtraProperties
 data class FirebaseBookmark(var url:String = "",
-                            var folderId:Int? = null,
+                            var folderId:String? = null,
                             var name:String = "",
                             var createdDate:Long = 0) {
+    fun toDbBookmark(): Bookmark {
+        return Bookmark(url, folderId, name, null, createdDate, false)
+    }
+
     companion object {
         fun create(bookmark: Bookmark): FirebaseBookmark {
             return FirebaseBookmark(url = bookmark.url, folderId = bookmark.folderId,

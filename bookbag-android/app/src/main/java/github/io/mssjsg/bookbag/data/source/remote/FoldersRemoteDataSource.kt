@@ -20,23 +20,23 @@ class FoldersRemoteDataSource @Inject constructor(val firebaseDatabase: Firebase
         return dataSnapshot.getValue(FirebaseFolder::class.java)
     }
 
-    override fun getFolders(folderId: Int?): Flowable<List<Folder>> {
+    override fun getFolders(folderId: String?): Flowable<List<Folder>> {
         throw UnsupportedOperationException("not supported query folders by folder id")
     }
 
-    override fun getCurrentFolder(folderId: Int): Flowable<Folder> {
+    override fun getCurrentFolder(folderId: String): Flowable<Folder> {
         throw UnsupportedOperationException("not supported query folder by folder id")
     }
 
     override fun saveFolder(folder: Folder) {
-        rootReference.child(folder.folderId.toString()).setValue(FirebaseFolder.create(folder))
+        rootReference.child(folder.folderId).setValue(FirebaseFolder.create(folder))
     }
 
     override fun updateFolder(folder: Folder) {
         saveFolder(folder)
     }
 
-    override fun moveFolder(folderId: Int, parentFolderId: Int?) {
+    override fun moveFolder(folderId: String, parentFolderId: String?) {
         val databaseReference = rootReference.child(folderId.toString())
         databaseReference.addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
@@ -55,7 +55,7 @@ class FoldersRemoteDataSource @Inject constructor(val firebaseDatabase: Firebase
         });
     }
 
-    override fun deleteFolders(folderIds: List<Int>) {
+    override fun deleteFolders(folderIds: List<String>) {
         for (id in folderIds) {
             rootReference.child(id.toString()).removeValue()
         }

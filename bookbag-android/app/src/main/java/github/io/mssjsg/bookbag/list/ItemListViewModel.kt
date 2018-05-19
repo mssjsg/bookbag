@@ -1,12 +1,11 @@
 package github.io.mssjsg.bookbag.list
 
 import android.arch.lifecycle.AndroidViewModel
-import android.arch.lifecycle.MutableLiveData
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
-import com.google.firebase.auth.FirebaseUser
 import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.R
+import github.io.mssjsg.bookbag.ViewModelScope
 import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.data.source.BookmarksRepository
@@ -15,13 +14,14 @@ import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderPathItem
 import github.io.mssjsg.bookbag.list.listitem.ListItem
+import github.io.mssjsg.bookbag.user.BookbagUserManager
+import github.io.mssjsg.bookbag.util.ItemUidGenerator
 import github.io.mssjsg.bookbag.util.linkpreview.JsoupWebPageCrawler
 import github.io.mssjsg.bookbag.util.linkpreview.LinkPreviewException
 import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
 import github.io.mssjsg.bookbag.util.linkpreview.UrlPreviewManager
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
-import github.io.mssjsg.bookbag.util.viewmodel.ViewModelScope
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -40,7 +40,8 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                                                  val foldersRepository: FoldersRepository,
                                                  val liveBus: LiveBus,
                                                  val localLiveBus: LocalLiveBus,
-                                                 val firebaseUserData: MutableLiveData<FirebaseUser>,
+                                                 val uidGenerator: ItemUidGenerator,
+                                                 val bookbagUserManager: BookbagUserManager,
                                                  val urlPreviewManager: UrlPreviewManager) : AndroidViewModel(application) {
 
     companion object {
@@ -64,14 +65,14 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
             }
         }
 
-    var currentFolderId: Int? = null
+    var currentFolderId: String? = null
     val items: ObservableList<ListItem> = ObservableArrayList()
     val paths: ObservableList<FolderPathItem> = ObservableArrayList()
     var isShowingBookmarks: Boolean = true
 
     private lateinit var disposables: CompositeDisposable
     private lateinit var currentFolder: Folder
-    lateinit var filteredFolders: IntArray
+    lateinit var filteredFolders: Array<String>
 
     var selectedItemCount: Int = 0
         private set
@@ -86,10 +87,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                 previewUrl = item.previewUrl
                 title = item.title
             } catch (e: LinkPreviewException) { }
-            val bookmark = Bookmark(bookmarkListItem.url, bookmarkListItem.parentFolderId,
-                    title, previewUrl)
-            bookmarksRepository.saveBookmark(bookmark)
-            bookmark
+            bookmarksRepository.updateBookmarkPreview(bookmarkListItem.url, previewUrl, title)
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe({}, {}))
     }
 
@@ -127,7 +125,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         }), foldersRepository.getFolders(currentFolderId).map {
             val items = arrayListOf<FolderListItem>()
             for (folder: Folder in it) {
-                val item = FolderListItem(folder.name, folderId = folder.folderId ?: -1,
+                val item = FolderListItem(folder.name, folderId = folder.folderId,
                         parentFolderId = folder.parentFolderId)
                 folder.folderId?.let {
                     item.isFiltered = filteredFolders.contains(it)
@@ -157,7 +155,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         })
     }
 
-    private fun getFolders(folderId: Int?, folderPathItems: MutableList<Folder> = ArrayList()): Single<List<Folder>> {
+    private fun getFolders(folderId: String?, folderPathItems: MutableList<Folder> = ArrayList()): Single<List<Folder>> {
         folderId?.let {
             return foldersRepository.getCurrentFolder(it).firstOrError().doAfterSuccess {
                 if (it.folderId == currentFolderId) {
@@ -168,7 +166,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                 getFolders(it.parentFolderId, folderPathItems)
             }
         } ?:let {
-            folderPathItems.add(0, Folder(null, application.getString(R.string.path_home)))
+            folderPathItems.add(0, Folder("", application.getString(R.string.path_home)))
             return Single.just(folderPathItems)
         }
     }
@@ -205,12 +203,14 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     }
 
     fun addFolder(folderName: String) {
-        foldersRepository.saveFolder(Folder(name = folderName, parentFolderId = currentFolderId))
+        val folderId = uidGenerator.generateItemUid(folderName)
+        foldersRepository.saveFolder(Folder(folderId = folderId,
+                name = folderName, parentFolderId = currentFolderId))
     }
 
     fun deleteSelectedItems() {
         val selectedUrls = ArrayList<String>()
-        val selectedFolderIds = ArrayList<Int>()
+        val selectedFolderIds = ArrayList<String>()
         for (listItem: ListItem in items) {
             if (listItem.isSelected) {
                 when(listItem) {
@@ -244,13 +244,13 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         }
     }
 
-    fun loadFolder(folderId: Int?) {
+    fun loadFolder(folderId: String?) {
         currentFolderId = folderId
         loadCurrentFolder()
     }
 
-    fun getSelectedFolderIds(): List<Int> {
-        val selectedFolderIds =  ArrayList<Int>()
+    fun getSelectedFolderIds(): List<String> {
+        val selectedFolderIds =  ArrayList<String>()
         for (listItem in items) {
             if (listItem.isSelected) {
                 when(listItem) {
@@ -263,9 +263,9 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         return selectedFolderIds
     }
 
-    fun moveSelectedItems(targetFolderId: Int?) {
+    fun moveSelectedItems(targetFolderId: String?) {
         val selectedBookmarkUrls =  ArrayList<String>()
-        val selectedFolderIds =  ArrayList<Int>()
+        val selectedFolderIds =  ArrayList<String>()
         for (listItem in items) {
             if (listItem.isSelected) {
                 when(listItem) {

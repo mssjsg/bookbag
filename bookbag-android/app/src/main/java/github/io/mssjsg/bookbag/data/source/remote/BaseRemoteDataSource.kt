@@ -7,7 +7,7 @@ abstract class BaseRemoteDataSource<DataType>(firebaseDatabase: FirebaseDatabase
     protected val databaseReference: DatabaseReference
     protected val rootReference: DatabaseReference
 
-    val listeners: Set<OnRemoteDataChangedListener<DataType>> = CopyOnWriteArraySet()
+    val listeners: MutableSet<OnRemoteDataChangedListener<DataType>> = CopyOnWriteArraySet()
 
     init {
         databaseReference = firebaseDatabase.reference

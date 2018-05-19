@@ -9,13 +9,13 @@ import io.reactivex.Flowable
 interface BookmarksDataSource {
     fun saveBookmark(bookmark: Bookmark)
 
-    fun moveBookmark(url: String, folderId: Int?)
+    fun moveBookmark(url: String, folderId: String?)
 
     fun updateBookmark(bookmark: Bookmark)
 
     fun deleteBookmarks(bookmarkUrls: List<String>)
 
-    fun getBookmarks(folderId: Int? = null) : Flowable<List<Bookmark>>
+    fun getBookmarks(folderId: String? = null) : Flowable<List<Bookmark>>
 
     fun getDirtyBookmarks() : Flowable<List<Bookmark>>
 }

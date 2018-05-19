@@ -5,9 +5,9 @@ import github.io.mssjsg.bookbag.data.Folder
 
 @IgnoreExtraProperties
 data class FirebaseFolder(
-        var folderId: Int? = null,
+        var folderId: String = "",
         var name: String = "",
-        var parentFolderId: Int? = null
+        var parentFolderId: String? = null
 ) {
     companion object {
         fun create(folder: Folder): FirebaseFolder {
@@ -16,5 +16,9 @@ data class FirebaseFolder(
                     parentFolderId = folder.parentFolderId
             )
         }
+    }
+
+    fun toDbFolder(): Folder {
+        return Folder(folderId, name, parentFolderId, false)
     }
 }

@@ -131,7 +131,7 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
             R.id.item_move -> {
                 val intent = Intent(this, FolderSelectionActivity::class.java)
                 intent.putFolderId(viewModel.currentFolderId)
-                intent.putFilteredFolderIds(viewModel.getSelectedFolderIds().toIntArray())
+                intent.putFilteredFolderIds(viewModel.getSelectedFolderIds().toTypedArray())
                 startActivityForResult(intent, REQUEST_ID_MOVE_ITEMS)
             }
             else -> false
@@ -161,7 +161,6 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
                 when (requestCode) {
                     Activity.RESULT_OK -> {
                         // Successfully signed in
-//                        FirebaseUserData.value = FirebaseAuth.getInstance().currentUser
                     }
                     else -> {
                         Log.e(TAG, response?.error.toString())

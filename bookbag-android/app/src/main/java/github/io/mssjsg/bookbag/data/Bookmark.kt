@@ -12,7 +12,7 @@ data class Bookmark(
         @PrimaryKey
         val url:String,
         @ColumnInfo(name = "folder_id")
-        val folderId:Int? = null,
+        val folderId:String? = null,
         val name:String = url,
         @ColumnInfo(name = "image_url")
         val imageUrl:String? = null,

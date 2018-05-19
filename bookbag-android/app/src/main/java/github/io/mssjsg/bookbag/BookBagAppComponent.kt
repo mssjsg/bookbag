@@ -4,7 +4,6 @@ import dagger.Component
 import github.io.mssjsg.bookbag.data.DataModule
 import github.io.mssjsg.bookbag.folderselection.FolderSelectionComponent
 import github.io.mssjsg.bookbag.main.MainComponent
-import github.io.mssjsg.bookbag.user.UserModule
 import github.io.mssjsg.bookbag.util.UtilModule
 import github.io.mssjsg.bookbag.util.executor.ExecutorModule
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
@@ -15,7 +14,7 @@ import javax.inject.Singleton
  */
 @Singleton
 @Component(modules = arrayOf(AppModule::class, DataModule::class, ExecutorModule::class,
-        UtilModule::class, UserModule::class))
+        UtilModule::class))
 interface BookBagAppComponent {
 
     fun inject(bookBagApplication: BookBagApplication)

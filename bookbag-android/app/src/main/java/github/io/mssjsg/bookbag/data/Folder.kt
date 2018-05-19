@@ -6,11 +6,11 @@ import android.arch.persistence.room.PrimaryKey
 
 @Entity(tableName = "folders")
 data class Folder(
-        @PrimaryKey(autoGenerate = true)
+        @PrimaryKey
         @ColumnInfo(name = "folder_id")
-        val folderId: Int? = null,
+        val folderId: String,
         val name: String,
         @ColumnInfo(name = "parent_folder_id")
-        val parentFolderId: Int? = null,
+        val parentFolderId: String? = null,
         val dirty: Boolean = true
 )

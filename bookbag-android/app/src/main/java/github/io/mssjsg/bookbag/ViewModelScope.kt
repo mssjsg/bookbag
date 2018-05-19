@@ -1,4 +1,4 @@
-package github.io.mssjsg.bookbag.util.viewmodel
+package github.io.mssjsg.bookbag
 
 import java.lang.annotation.Documented
 import java.lang.annotation.Retention
