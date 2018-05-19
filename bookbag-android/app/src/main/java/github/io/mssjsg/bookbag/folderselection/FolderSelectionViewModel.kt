@@ -1,5 +1,7 @@
 package github.io.mssjsg.bookbag.folderselection
 
+import android.arch.lifecycle.MutableLiveData
+import com.google.firebase.auth.FirebaseUser
 import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.data.source.BookmarksRepository
 import github.io.mssjsg.bookbag.data.source.FoldersRepository
@@ -14,8 +16,9 @@ class FolderSelectionViewModel @Inject constructor(application: BookBagApplicati
                                                    foldersRepository: FoldersRepository,
                                                    liveBus: LiveBus,
                                                    localLiveBus: LocalLiveBus,
+                                                   firebaseUserData: MutableLiveData<FirebaseUser>,
                                                    urlPreviewManager: UrlPreviewManager) : ItemListViewModel(application,
-        bookmarksRepository, foldersRepository, liveBus, localLiveBus, urlPreviewManager) {
+        bookmarksRepository, foldersRepository, liveBus, localLiveBus, firebaseUserData, urlPreviewManager) {
 
     lateinit var folderSelectionComponent: FolderSelectionComponent
 }

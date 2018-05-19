@@ -2,6 +2,7 @@ package github.io.mssjsg.bookbag.data
 
 import android.arch.persistence.room.Room
 import android.content.Context
+import com.google.firebase.database.FirebaseDatabase
 import dagger.Module
 import dagger.Provides
 import github.io.mssjsg.bookbag.data.qualifier.LocalDataSource
@@ -42,7 +43,7 @@ class DataModule {
     @Singleton
     @LocalDataSource
     fun provideBookmarkLocalDataSource(@DiskIoExecutor executor: Executor,
-                               bookmarksDao: BookmarksDao): BookmarksDataSource {
+                                       bookmarksDao: BookmarksDao): BookmarksDataSource {
         return BookmarksLocalDataSource(executor, bookmarksDao)
     }
 
@@ -50,7 +51,7 @@ class DataModule {
     @Singleton
     @LocalDataSource
     fun provideFolderLocalDataSource(@DiskIoExecutor executor: Executor,
-                                       foldersDao: FoldersDao): FoldersDataSource {
+                                     foldersDao: FoldersDao): FoldersDataSource {
         return FoldersLocalDataSource(executor, foldersDao)
     }
 
@@ -64,5 +65,11 @@ class DataModule {
     @Singleton
     fun provideFoldersRepository(@LocalDataSource dataSource: FoldersDataSource): FoldersRepository {
         return FoldersRepository(dataSource)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseDatabase(): FirebaseDatabase {
+        return FirebaseDatabase.getInstance()
     }
 }

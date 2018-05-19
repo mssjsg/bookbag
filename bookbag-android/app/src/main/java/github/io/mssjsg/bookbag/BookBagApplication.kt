@@ -2,6 +2,7 @@ package github.io.mssjsg.bookbag
 
 import android.app.Application
 import github.io.mssjsg.bookbag.data.DataModule
+import github.io.mssjsg.bookbag.user.UserModule
 import github.io.mssjsg.bookbag.util.executor.ExecutorModule
 
 
@@ -18,6 +19,7 @@ class BookBagApplication: Application() {
         appComponent = DaggerBookBagAppComponent.builder()
                 .appModule(AppModule(this))
                 .dataModule(DataModule())
+                .userModule(UserModule())
                 .executorModule(ExecutorModule())
                 .build()
     }

@@ -10,6 +10,7 @@ import android.databinding.DataBindingUtil
 import android.net.Uri
 import android.os.Bundle
 import android.view.*
+import com.firebase.ui.auth.AuthUI
 import github.io.mssjsg.bookbag.BookBagAppComponent
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.databinding.ActivityMainBinding
@@ -22,16 +23,12 @@ import github.io.mssjsg.bookbag.util.putFilteredFolderIds
 import github.io.mssjsg.bookbag.util.putFolderId
 import github.io.mssjsg.bookbag.widget.SimpleConfirmDialogFragment
 import github.io.mssjsg.bookbag.widget.SimpleInputDialogFragment
+import java.util.*
+import android.util.Log
+import com.firebase.ui.auth.IdpResponse
+
 
 class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
-    companion object {
-        private const val CONFIRM_DIALOG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_CREATE_NEW_FOLDER"
-        private const val CONFIRM_DIALOG_EXIT = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_EXIT"
-        private const val TAG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.TAG_CREATE_NEW_FOLDER"
-        private const val TAG_EXIT = "github.io.mssjsg.bookbag.main.TAG_EXIT"
-        private const val REQUEST_ID_MOVE_ITEMS = 1000
-    }
-
     private var actionMode: ActionMode? = null
     private lateinit var mainBinding: ActivityMainBinding
 
@@ -57,7 +54,7 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
         viewModel.liveBus.let {
             it.subscribe(this, Observer {
                 it?.apply {
-                    when(requestId) {
+                    when (requestId) {
                         CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.addFolder(input)
                     }
                 }
@@ -65,7 +62,7 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
 
             it.subscribe(this, Observer {
                 it?.apply {
-                    when(requestId) {
+                    when (requestId) {
                         CONFIRM_DIALOG_EXIT -> finish()
                     }
                 }
@@ -103,12 +100,15 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         item?.apply {
-            when(itemId) {
+            when (itemId) {
                 R.id.item_new_folder -> {
                     SimpleInputDialogFragment.newInstance(CONFIRM_DIALOG_CREATE_NEW_FOLDER,
                             hint = getString(R.string.hint_folder_name),
                             title = getString(R.string.title_new_folder))
                             .show(supportFragmentManager, TAG_CREATE_NEW_FOLDER)
+                }
+                R.id.item_sign_in -> {
+                    launchSignIn()
                 }
             }
         }
@@ -142,19 +142,33 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if(resultCode == Activity.RESULT_OK) {
-            when (requestCode) {
-                REQUEST_ID_MOVE_ITEMS -> {
-                    data?.let {
-                        val folderId = data.getFolderId()
-                        viewModel.moveSelectedItems(folderId)
-                        viewModel.loadFolder(folderId)
+        when (requestCode) {
+            REQUEST_ID_MOVE_ITEMS -> {
+                actionMode?.finish()
+
+                if (resultCode != Activity.RESULT_OK) {
+                    return
+                }
+
+                data?.let {
+                    val folderId = data.getFolderId()
+                    viewModel.moveSelectedItems(folderId)
+                    viewModel.loadFolder(folderId)
+                }
+            }
+            REQUEST_SIGN_IN -> {
+                val response = IdpResponse.fromResultIntent(data)
+                when (requestCode) {
+                    Activity.RESULT_OK -> {
+                        // Successfully signed in
+//                        FirebaseUserData.value = FirebaseAuth.getInstance().currentUser
+                    }
+                    else -> {
+                        Log.e(TAG, response?.error.toString())
                     }
                 }
             }
         }
-
-        actionMode?.finish()
     }
 
     override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
@@ -172,7 +186,7 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
     }
 
     override fun onBackPressed() {
-        if(viewModel.currentFolderId == null) {
+        if (viewModel.currentFolderId == null) {
             SimpleConfirmDialogFragment.newInstance(CONFIRM_DIALOG_EXIT,
                     title = getString(R.string.confirm_exit))
                     .show(supportFragmentManager, TAG_EXIT)
@@ -181,17 +195,44 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
         }
     }
 
+    private fun launchSignIn() {
+        // Choose authentication providers
+        val providers = Arrays.asList(
+                AuthUI.IdpConfig.EmailBuilder().build(),
+                AuthUI.IdpConfig.GoogleBuilder().build())
+//                AuthUI.IdpConfig.FacebookBuilder().build(),
+//                AuthUI.IdpConfig.TwitterBuilder().build())
+
+        // Create and launch sign-in intent
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setAvailableProviders(providers)
+                        .build(),
+                REQUEST_SIGN_IN)
+    }
+
     private fun detectNewUrl(intent: Intent?) {
         val newUrl = intent?.getSharedUrl()
         newUrl?.let { viewModel.addBookmark(newUrl) }
     }
 
-    private class ViewModelFactory(val viewModelComponent: BookBagAppComponent): ViewModelProvider.NewInstanceFactory() {
+    private class ViewModelFactory(val viewModelComponent: BookBagAppComponent) : ViewModelProvider.NewInstanceFactory() {
 
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
             return viewModelComponent.mainComponent().let { component ->
                 component.provideMainViewModel().apply { mainComponent = component } as T
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "MainActivity"
+        private const val CONFIRM_DIALOG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_CREATE_NEW_FOLDER"
+        private const val CONFIRM_DIALOG_EXIT = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_EXIT"
+        private const val TAG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.TAG_CREATE_NEW_FOLDER"
+        private const val TAG_EXIT = "github.io.mssjsg.bookbag.main.TAG_EXIT"
+        private const val REQUEST_ID_MOVE_ITEMS = 1000
+        private const val REQUEST_SIGN_IN = 1001
     }
 }

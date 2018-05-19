@@ -1,8 +1,10 @@
 package github.io.mssjsg.bookbag.list
 
 import android.arch.lifecycle.AndroidViewModel
+import android.arch.lifecycle.MutableLiveData
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
+import com.google.firebase.auth.FirebaseUser
 import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.data.Bookmark
@@ -34,10 +36,11 @@ import javax.inject.Inject
  */
 @ViewModelScope
 open class ItemListViewModel @Inject constructor(val application: BookBagApplication,
-                                            val bookmarksRepository: BookmarksRepository,
-                                            val foldersRepository: FoldersRepository,
-                                            val liveBus: LiveBus,
-                                            val localLiveBus: LocalLiveBus,
+                                                 val bookmarksRepository: BookmarksRepository,
+                                                 val foldersRepository: FoldersRepository,
+                                                 val liveBus: LiveBus,
+                                                 val localLiveBus: LocalLiveBus,
+                                                 val firebaseUserData: MutableLiveData<FirebaseUser>,
                                                  val urlPreviewManager: UrlPreviewManager) : AndroidViewModel(application) {
 
     companion object {

@@ -5,4 +5,8 @@
         android:title="@string/menu_item_new_folder"
           android:icon="@drawable/ic_create_new_folder"
         app:showAsAction="always"/>
+
+    <item android:id="@+id/item_sign_in"
+          android:title="@string/menu_item_sign_in"
+          app:showAsAction="never"/>
 </menu>
