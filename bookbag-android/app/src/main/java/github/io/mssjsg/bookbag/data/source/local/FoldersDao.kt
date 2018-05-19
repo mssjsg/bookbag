@@ -10,6 +10,9 @@ import io.reactivex.Flowable
 @Dao
 interface FoldersDao {
 
+    @Query("SELECT * FROM folders WHERE dirty IS 1")
+    fun getDirtyFolders(): Flowable<List<Folder>>
+
     @Query("SELECT * FROM folders WHERE parent_folder_id IS NULL")
     fun getHomeFolders(): Flowable<List<Folder>>
 
@@ -28,6 +31,6 @@ interface FoldersDao {
     @Query("DELETE FROM folders WHERE folder_id = :folderId OR parent_folder_id = :folderId")
     fun deleteFolderByFolderId(folderId: Int)
 
-    @Query("UPDATE folders SET parent_folder_id = :parentFolderId WHERE folder_id = :folderId")
+    @Query("UPDATE folders SET parent_folder_id = :parentFolderId AND dirty = 1 WHERE folder_id = :folderId")
     fun moveFolder(folderId: Int, parentFolderId: Int?)
 }

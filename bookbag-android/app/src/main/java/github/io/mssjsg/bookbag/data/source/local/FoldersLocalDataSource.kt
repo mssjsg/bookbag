@@ -2,13 +2,19 @@ package github.io.mssjsg.bookbag.data.source.local
 
 import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.data.source.FoldersDataSource
+import github.io.mssjsg.bookbag.util.executor.qualifier.DiskIoExecutor
 import io.reactivex.Flowable
 import java.util.concurrent.Executor
+import javax.inject.Inject
 
 /**
  * Created by Sing on 27/3/2018.
  */
-class FoldersLocalDataSource(val executor: Executor, val foldersDao: FoldersDao) : FoldersDataSource {
+class FoldersLocalDataSource @Inject constructor(@DiskIoExecutor val executor: Executor, val foldersDao: FoldersDao) : FoldersDataSource {
+    override fun getDirtyFolders(): Flowable<List<Folder>> {
+        return foldersDao.getDirtyFolders()
+    }
+
     override fun moveFolder(folderId: Int, parentFolderId: Int?) {
         executor.execute {
             foldersDao.moveFolder(folderId, parentFolderId)

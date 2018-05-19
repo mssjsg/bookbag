@@ -17,4 +17,5 @@ data class Bookmark(
         @ColumnInfo(name = "image_url")
         val imageUrl:String? = null,
         @ColumnInfo(name = "create_date")
-        val createdDate:Long = System.currentTimeMillis())
+        val createdDate:Long = System.currentTimeMillis(),
+        val dirty: Boolean = true)

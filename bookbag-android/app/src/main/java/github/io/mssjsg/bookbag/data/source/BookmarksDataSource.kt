@@ -16,4 +16,6 @@ interface BookmarksDataSource {
     fun deleteBookmarks(bookmarkUrls: List<String>)
 
     fun getBookmarks(folderId: Int? = null) : Flowable<List<Bookmark>>
+
+    fun getDirtyBookmarks() : Flowable<List<Bookmark>>
 }

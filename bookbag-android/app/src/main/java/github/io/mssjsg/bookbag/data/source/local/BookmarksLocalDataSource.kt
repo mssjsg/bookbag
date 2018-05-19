@@ -1,16 +1,20 @@
 package github.io.mssjsg.bookbag.data.source.local
 
-import android.arch.lifecycle.LiveData
 import github.io.mssjsg.bookbag.data.Bookmark
-import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.data.source.BookmarksDataSource
+import github.io.mssjsg.bookbag.util.executor.qualifier.DiskIoExecutor
 import io.reactivex.Flowable
 import java.util.concurrent.Executor
+import javax.inject.Inject
 
 /**
  * Created by Sing on 27/3/2018.
  */
-class BookmarksLocalDataSource(val executor: Executor, val bookmarksDao: BookmarksDao) : BookmarksDataSource {
+class BookmarksLocalDataSource @Inject constructor(@DiskIoExecutor val executor: Executor, val bookmarksDao: BookmarksDao) : BookmarksDataSource {
+    override fun getDirtyBookmarks(): Flowable<List<Bookmark>> {
+        return bookmarksDao.getDirtyBookmarks()
+    }
+
     override fun moveBookmark(url: String, folderId: Int?) {
         executor.execute {
             bookmarksDao.moveBookmark(url, folderId)

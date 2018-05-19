@@ -24,6 +24,9 @@ interface BookmarksDao {
     @Query("DELETE FROM bookmarks WHERE url = :bookmarkUrl")
     fun deleteBookmarkByUrl(bookmarkUrl: String)
 
-    @Query("UPDATE bookmarks SET folder_id = :folderId WHERE url = :url")
+    @Query("UPDATE bookmarks SET folder_id = :folderId AND dirty = 1 WHERE url = :url")
     fun moveBookmark(url: String, folderId: Int?)
+
+    @Query("SELECT * FROM bookmarks WHERE dirty IS 1")
+    fun getDirtyBookmarks(): Flowable<List<Bookmark>>
 }

@@ -11,5 +11,6 @@ data class Folder(
         val folderId: Int? = null,
         val name: String,
         @ColumnInfo(name = "parent_folder_id")
-        val parentFolderId: Int? = null
+        val parentFolderId: Int? = null,
+        val dirty: Boolean = true
 )

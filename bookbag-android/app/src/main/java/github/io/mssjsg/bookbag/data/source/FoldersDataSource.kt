@@ -11,6 +11,8 @@ interface FoldersDataSource {
 
     fun getCurrentFolder(folderId: Int) : Flowable<Folder>
 
+    fun getDirtyFolders(): Flowable<List<Folder>>
+
     fun saveFolder(folder: Folder)
 
     fun updateFolder(folder: Folder)

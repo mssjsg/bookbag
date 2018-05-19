@@ -1,16 +1,31 @@
 package github.io.mssjsg.bookbag.data.source
 
-import android.arch.lifecycle.LiveData
 import github.io.mssjsg.bookbag.data.Bookmark
-import github.io.mssjsg.bookbag.data.qualifier.LocalDataSource
+import github.io.mssjsg.bookbag.data.source.local.BookmarksLocalDataSource
+import github.io.mssjsg.bookbag.data.source.remote.BookmarksRemoteDataSource
 import io.reactivex.Flowable
 import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Created by Sing on 27/3/2018.
  */
-class BookmarksRepository(val localDataSource: BookmarksDataSource): BookmarksDataSource {
+class BookmarksRepository @Inject constructor(val localDataSource: BookmarksLocalDataSource,
+                          val remoteDataSource: BookmarksRemoteDataSource): BookmarksDataSource {
+
+    init {
+        localDataSource.getDirtyBookmarks().subscribe({
+            for(folder in it) {
+                remoteDataSource.saveBookmark(folder)
+                val cleanFolder = folder.copy(dirty = false)
+                localDataSource.saveBookmark(cleanFolder)
+            }
+        })
+    }
+
+    override fun getDirtyBookmarks(): Flowable<List<Bookmark>> {
+        return localDataSource.getDirtyBookmarks()
+    }
+
     override fun moveBookmark(url: String, folderId: Int?) {
         localDataSource.moveBookmark(url, folderId)
     }
@@ -21,6 +36,7 @@ class BookmarksRepository(val localDataSource: BookmarksDataSource): BookmarksDa
 
     override fun deleteBookmarks(bookmarkUrls: List<String>) {
         localDataSource.deleteBookmarks(bookmarkUrls)
+        remoteDataSource.deleteBookmarks(bookmarkUrls)
     }
 
     override fun saveBookmark(bookmark: Bookmark) {

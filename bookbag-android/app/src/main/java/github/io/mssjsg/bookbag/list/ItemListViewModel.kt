@@ -198,7 +198,8 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         if (urls.size > 0) {
             val detectedUrl = JsoupWebPageCrawler.extendedTrim(urls.get(0))
             if (detectedUrl.isNotEmpty()) {
-                bookmarksRepository.saveBookmark(Bookmark(detectedUrl, currentFolderId))
+                bookmarksRepository.saveBookmark(Bookmark(url = detectedUrl,
+                        folderId = currentFolderId))
             }
         }
     }

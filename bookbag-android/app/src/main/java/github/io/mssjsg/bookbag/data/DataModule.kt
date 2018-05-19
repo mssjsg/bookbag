@@ -1,18 +1,15 @@
 package github.io.mssjsg.bookbag.data
 
+import android.arch.persistence.db.SupportSQLiteDatabase
 import android.arch.persistence.room.Room
+import android.arch.persistence.room.migration.Migration
 import android.content.Context
 import com.google.firebase.database.FirebaseDatabase
 import dagger.Module
 import dagger.Provides
-import github.io.mssjsg.bookbag.data.qualifier.LocalDataSource
-import github.io.mssjsg.bookbag.data.source.BookmarksDataSource
-import github.io.mssjsg.bookbag.data.source.BookmarksRepository
-import github.io.mssjsg.bookbag.data.source.FoldersDataSource
-import github.io.mssjsg.bookbag.data.source.FoldersRepository
-import github.io.mssjsg.bookbag.data.source.local.*
-import github.io.mssjsg.bookbag.util.executor.qualifier.DiskIoExecutor
-import java.util.concurrent.Executor
+import github.io.mssjsg.bookbag.data.source.local.BookBagDatabase
+import github.io.mssjsg.bookbag.data.source.local.BookmarksDao
+import github.io.mssjsg.bookbag.data.source.local.FoldersDao
 import javax.inject.Singleton
 
 /**
@@ -24,7 +21,14 @@ class DataModule {
     @Singleton
     fun provideBookBagDatabase(context: Context): BookBagDatabase {
         return Room.databaseBuilder(context,
-                BookBagDatabase::class.java, "bookbag.db").build()
+                BookBagDatabase::class.java, "bookbag.db")
+                .addMigrations(object: Migration(1, 2) {
+                    override fun migrate(database: SupportSQLiteDatabase) {
+                        database.execSQL("ALTER TABLE folders ADD COLUMN dirty INTEGER NOT NULL DEFAULT 1");
+                        database.execSQL("ALTER TABLE bookmarks ADD COLUMN dirty INTEGER NOT NULL DEFAULT 1");
+                    }
+
+                }).build()
     }
 
     @Provides
@@ -37,34 +41,6 @@ class DataModule {
     @Singleton
     fun provideFoldersDao(bookBagDatabase: BookBagDatabase): FoldersDao {
         return bookBagDatabase.foldersDao()
-    }
-
-    @Provides
-    @Singleton
-    @LocalDataSource
-    fun provideBookmarkLocalDataSource(@DiskIoExecutor executor: Executor,
-                                       bookmarksDao: BookmarksDao): BookmarksDataSource {
-        return BookmarksLocalDataSource(executor, bookmarksDao)
-    }
-
-    @Provides
-    @Singleton
-    @LocalDataSource
-    fun provideFolderLocalDataSource(@DiskIoExecutor executor: Executor,
-                                     foldersDao: FoldersDao): FoldersDataSource {
-        return FoldersLocalDataSource(executor, foldersDao)
-    }
-
-    @Provides
-    @Singleton
-    fun provideBookmarksRepository(@LocalDataSource dataSource: BookmarksDataSource): BookmarksRepository {
-        return BookmarksRepository(dataSource)
-    }
-
-    @Provides
-    @Singleton
-    fun provideFoldersRepository(@LocalDataSource dataSource: FoldersDataSource): FoldersRepository {
-        return FoldersRepository(dataSource)
     }
 
     @Provides
