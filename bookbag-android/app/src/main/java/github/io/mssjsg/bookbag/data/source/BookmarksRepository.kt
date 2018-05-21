@@ -25,7 +25,6 @@ class BookmarksRepository @Inject constructor(val localDataSource: BookmarksLoca
             }
 
             override fun onItemUpdated(data: FirebaseBookmark) {
-                updateBookmark(data.toDbBookmark())
             }
         })
     }

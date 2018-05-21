@@ -9,13 +9,17 @@ import io.reactivex.Flowable
  */
 @Dao
 interface BookmarksDao {
+
+    @Query("SELECT * FROM bookmarks WHERE url = :url")
+    fun getBookmark(url: String): Bookmark
+
     @Query("SELECT * FROM bookmarks WHERE folder_id IS NULL")
     fun getHomeBookmarks(): Flowable<List<Bookmark>>
 
     @Query("SELECT * FROM bookmarks WHERE folder_id = :folderId ORDER BY create_date DESC")
     fun getBookmarksByFolderId(folderId: String): Flowable<List<Bookmark>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertBookmark(bookmark: Bookmark)
 
     @Update

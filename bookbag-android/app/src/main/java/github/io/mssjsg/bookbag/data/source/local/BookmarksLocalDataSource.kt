@@ -15,7 +15,8 @@ class BookmarksLocalDataSource @Inject constructor(@DiskIoExecutor val executor:
 
     fun updateBookmarkPreview(bookmarkUrl: String, imageUrl: String, title: String) {
         executor.execute {
-            bookmarksDao.updateBookmarkPreview(bookmarkUrl, imageUrl, title)
+            val bookmark = bookmarksDao.getBookmark(bookmarkUrl)
+            bookmarksDao.updateBookmark(bookmark.copy(imageUrl = imageUrl, name = title))
         }
     }
 
