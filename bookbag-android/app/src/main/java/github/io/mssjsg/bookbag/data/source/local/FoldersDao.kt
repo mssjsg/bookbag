@@ -20,7 +20,7 @@ interface FoldersDao {
     fun getFoldersByParentFolderId(folderId: String): Flowable<List<Folder>>
 
     @Query("SELECT * FROM folders WHERE folder_id = :folderId")
-    fun getCurrentFolderByFolderId(folderId: String): Flowable<Folder>
+    fun getFolder(folderId: String): Flowable<Folder>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertFolder(folder: Folder)

@@ -144,9 +144,8 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             REQUEST_ID_MOVE_ITEMS -> {
-                actionMode?.finish()
-
                 if (resultCode != Activity.RESULT_OK) {
+                    actionMode?.finish()
                     return
                 }
 
@@ -155,6 +154,8 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
                     viewModel.moveSelectedItems(folderId)
                     viewModel.loadFolder(folderId)
                 }
+
+                actionMode?.finish()
             }
             REQUEST_SIGN_IN -> {
                 val response = IdpResponse.fromResultIntent(data)

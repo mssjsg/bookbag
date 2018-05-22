@@ -19,7 +19,7 @@ interface BookmarksDao {
     @Query("SELECT * FROM bookmarks WHERE folder_id = :folderId ORDER BY create_date DESC")
     fun getBookmarksByFolderId(folderId: String): Flowable<List<Bookmark>>
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertBookmark(bookmark: Bookmark)
 
     @Update

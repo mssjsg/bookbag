@@ -19,13 +19,16 @@ class FoldersLocalDataSource @Inject constructor(val schedulers: BookbagSchedule
     }
 
     override fun moveItem(folderId: String, parentFolderId: String?) {
-        Observable.fromCallable({
-            foldersDao.moveFolder(folderId, parentFolderId)
-        }).subscribeOn(schedulers.io()).subscribe()
+        foldersDao.getFolder(folderId)
+                .firstOrError()
+                .subscribeOn(schedulers.io())
+                .subscribe({ folder ->
+                    foldersDao.updateFolder(folder.copy(parentFolderId = parentFolderId, dirty = true))
+                }, {})
     }
 
     override fun getItem(folderId: String): Flowable<Folder> {
-        return foldersDao.getCurrentFolderByFolderId(folderId)
+        return foldersDao.getFolder(folderId)
     }
 
     override fun getItems(folderId: String?): Flowable<List<Folder>> {

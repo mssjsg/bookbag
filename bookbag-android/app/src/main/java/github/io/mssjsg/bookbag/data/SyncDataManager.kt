@@ -1,5 +1,6 @@
 package github.io.mssjsg.bookbag.data
 
+import android.util.Log
 import github.io.mssjsg.bookbag.data.source.BookbagDataSource
 import github.io.mssjsg.bookbag.data.source.local.BookmarksLocalDataSource
 import github.io.mssjsg.bookbag.data.source.local.FoldersLocalDataSource
@@ -51,7 +52,16 @@ class SyncDataManager @Inject constructor(val userData: BookbagUserData,
         fun listenRemoteChanges() {
             remoteDataSource.listeners.add(object: RemoteDataSource.OnRemoteDataChangedListener<RemoteData> {
                 override fun onItemAdded(data: RemoteData) {
-                    localDataSource.saveItem(remoteDataSource.convertRemoteToLocalData(data))
+                    localDataSource.getItem(remoteDataSource.getIdFromRemoteData(data))
+                            .firstOrError()
+                            .subscribeOn(schedulers.io())
+                            .subscribe({
+                                if (it == null) {
+                                    localDataSource.saveItem(remoteDataSource.convertRemoteToLocalData(data))
+                                }
+                            }, {
+                                Log.d(TAG, "item not found")
+                            })
                 }
 
                 override fun onItemRemoved(data: RemoteData) {
@@ -63,5 +73,9 @@ class SyncDataManager @Inject constructor(val userData: BookbagUserData,
                 }
             })
         }
+    }
+
+    companion object {
+        const val TAG = "SyncDataManager"
     }
 }

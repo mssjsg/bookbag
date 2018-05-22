@@ -23,7 +23,7 @@ class BookmarksLocalDataSource @Inject constructor(val schedulers: BookbagSchedu
                 .firstOrError()
                 .subscribeOn(schedulers.io())
                 .subscribe({ bookmark ->
-                    bookmarksDao.updateBookmark(bookmark.copy(imageUrl = imageUrl, name = title))
+                    bookmarksDao.updateBookmark(bookmark.copy(imageUrl = imageUrl, name = title, dirty = true))
                 }, {})
     }
 
@@ -32,9 +32,12 @@ class BookmarksLocalDataSource @Inject constructor(val schedulers: BookbagSchedu
     }
 
     override fun moveItem(url: String, folderId: String?) {
-        Observable.fromCallable({
-            bookmarksDao.moveBookmark(url, folderId)
-        }).subscribeOn(schedulers.io()).subscribe()
+        bookmarksDao.getBookmark(url)
+                .firstOrError()
+                .subscribeOn(schedulers.io())
+                .subscribe({ bookmark ->
+                    bookmarksDao.updateBookmark(bookmark.copy(folderId = folderId, dirty = true))
+                }, {})
     }
 
     override fun getItems(folderId: String?): Flowable<List<Bookmark>> {
