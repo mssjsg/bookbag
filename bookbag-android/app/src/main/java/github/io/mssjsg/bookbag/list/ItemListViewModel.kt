@@ -14,7 +14,7 @@ import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderPathItem
 import github.io.mssjsg.bookbag.list.listitem.ListItem
-import github.io.mssjsg.bookbag.user.BookbagUserManager
+import github.io.mssjsg.bookbag.user.BookbagUserData
 import github.io.mssjsg.bookbag.util.ItemUidGenerator
 import github.io.mssjsg.bookbag.util.linkpreview.JsoupWebPageCrawler
 import github.io.mssjsg.bookbag.util.linkpreview.LinkPreviewException
@@ -41,7 +41,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                                                  val liveBus: LiveBus,
                                                  val localLiveBus: LocalLiveBus,
                                                  val uidGenerator: ItemUidGenerator,
-                                                 val bookbagUserManager: BookbagUserManager,
+                                                 val bookbagUserData: BookbagUserData,
                                                  val urlPreviewManager: UrlPreviewManager) : AndroidViewModel(application) {
 
     companion object {
@@ -104,7 +104,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         disposables.add(Flowable.combineLatest(Flowable.just(isShowingBookmarks).flatMap {
             isShowingBookmarks ->
             if (isShowingBookmarks) {
-                bookmarksRepository.getBookmarks(currentFolderId).map {
+                bookmarksRepository.getItems(currentFolderId).map {
                     val items = arrayListOf<BookmarkListItem>()
                     for (bookmark: Bookmark in it) {
                         val bookmarkListItem = BookmarkListItem(bookmark.name, bookmark.url,
@@ -122,7 +122,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                     loadPreview(bookmarkListItem)
                 }
             }
-        }), foldersRepository.getFolders(currentFolderId).map {
+        }), foldersRepository.getItems(currentFolderId).map {
             val items = arrayListOf<FolderListItem>()
             for (folder: Folder in it) {
                 val item = FolderListItem(folder.name, folderId = folder.folderId,
@@ -157,7 +157,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
 
     private fun getFolders(folderId: String?, folderPathItems: MutableList<Folder> = ArrayList()): Single<List<Folder>> {
         folderId?.let {
-            return foldersRepository.getCurrentFolder(it).firstOrError().doAfterSuccess {
+            return foldersRepository.getItem(it).firstOrError().doAfterSuccess {
                 if (it.folderId == currentFolderId) {
                     currentFolder = it
                 }
@@ -196,7 +196,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         if (urls.size > 0) {
             val detectedUrl = JsoupWebPageCrawler.extendedTrim(urls.get(0))
             if (detectedUrl.isNotEmpty()) {
-                bookmarksRepository.saveBookmark(Bookmark(url = detectedUrl,
+                bookmarksRepository.saveItem(Bookmark(url = detectedUrl,
                         folderId = currentFolderId))
             }
         }
@@ -204,7 +204,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
 
     fun addFolder(folderName: String) {
         val folderId = uidGenerator.generateItemUid(folderName)
-        foldersRepository.saveFolder(Folder(folderId = folderId,
+        foldersRepository.saveItem(Folder(folderId = folderId,
                 name = folderName, parentFolderId = currentFolderId))
     }
 
@@ -219,8 +219,8 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                 }
             }
         }
-        bookmarksRepository.deleteBookmarks(selectedUrls)
-        foldersRepository.deleteFolders(selectedFolderIds)
+        bookmarksRepository.deleteItems(selectedUrls)
+        foldersRepository.deleteItems(selectedFolderIds)
     }
 
     fun getItemViewType(position: Int): Int {
@@ -280,11 +280,11 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         }
 
         for (url in selectedBookmarkUrls) {
-            bookmarksRepository.moveBookmark(url, targetFolderId)
+            bookmarksRepository.moveItem(url, targetFolderId)
         }
 
         for (folderId in selectedFolderIds) {
-            foldersRepository.moveFolder(folderId, targetFolderId)
+            foldersRepository.moveItem(folderId, targetFolderId)
         }
     }
 }

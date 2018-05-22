@@ -1,8 +1,12 @@
 package github.io.mssjsg.bookbag
 
 import android.app.Application
+import android.content.Context
 import github.io.mssjsg.bookbag.data.DataModule
 import github.io.mssjsg.bookbag.util.executor.ExecutorModule
+import android.support.multidex.MultiDex
+
+
 
 
 /**
@@ -13,6 +17,11 @@ class BookBagApplication: Application() {
     lateinit var appComponent: BookBagAppComponent
         private set
 
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(base)
+        MultiDex.install(this)
+    }
+
     override fun onCreate() {
         super.onCreate()
         appComponent = DaggerBookBagAppComponent.builder()
@@ -20,5 +29,7 @@ class BookBagApplication: Application() {
                 .dataModule(DataModule())
                 .executorModule(ExecutorModule())
                 .build()
+
+        appComponent.provideSyncDataManager().initialize()
     }
 }

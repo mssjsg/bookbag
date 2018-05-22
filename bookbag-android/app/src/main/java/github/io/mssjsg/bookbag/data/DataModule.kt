@@ -22,13 +22,7 @@ class DataModule {
     fun provideBookBagDatabase(context: Context): BookBagDatabase {
         return Room.databaseBuilder(context,
                 BookBagDatabase::class.java, "bookbag.db")
-                .addMigrations(object: Migration(1, 2) {
-                    override fun migrate(database: SupportSQLiteDatabase) {
-                        database.execSQL("ALTER TABLE folders ADD COLUMN dirty INTEGER NOT NULL DEFAULT 1");
-                        database.execSQL("ALTER TABLE bookmarks ADD COLUMN dirty INTEGER NOT NULL DEFAULT 1");
-                    }
-
-                }).build()
+                .build()
     }
 
     @Provides

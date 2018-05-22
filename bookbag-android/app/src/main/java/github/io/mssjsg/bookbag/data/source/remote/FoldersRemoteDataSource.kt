@@ -5,40 +5,37 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import github.io.mssjsg.bookbag.data.Folder
-import github.io.mssjsg.bookbag.data.source.FoldersDataSource
 import github.io.mssjsg.bookbag.data.source.remote.data.FirebaseFolder
-import io.reactivex.Flowable
+import github.io.mssjsg.bookbag.user.BookbagUserData
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class FoldersRemoteDataSource @Inject constructor(val firebaseDatabase: FirebaseDatabase): BaseRemoteDataSource<FirebaseFolder>(firebaseDatabase,
-        "folders"), FoldersDataSource {
-    override fun getDirtyFolders(): Flowable<List<Folder>> {
-        throw UnsupportedOperationException("not supported query dirty folders")
+@Singleton
+class FoldersRemoteDataSource @Inject constructor(firebaseDatabase: FirebaseDatabase, userData: BookbagUserData): RemoteDataSource<FirebaseFolder, Folder>(firebaseDatabase,
+        userData, "folders") {
+    override fun getIdFromRemoteData(remoteData: FirebaseFolder): String {
+        return remoteData.folderId
+    }
+
+    override fun convertRemoteToLocalData(remoteData: FirebaseFolder): Folder {
+        return remoteData.toLocalData()
     }
 
     override fun getItemFromSnapshot(dataSnapshot: DataSnapshot): FirebaseFolder? {
         return dataSnapshot.getValue(FirebaseFolder::class.java)
     }
 
-    override fun getFolders(folderId: String?): Flowable<List<Folder>> {
-        throw UnsupportedOperationException("not supported query folders by folder id")
+    override fun saveItem(folder: Folder) {
+        rootReference?.child(folder.folderId)?.setValue(FirebaseFolder.create(folder))
     }
 
-    override fun getCurrentFolder(folderId: String): Flowable<Folder> {
-        throw UnsupportedOperationException("not supported query folder by folder id")
+    override fun updateItem(folder: Folder) {
+        saveItem(folder)
     }
 
-    override fun saveFolder(folder: Folder) {
-        rootReference.child(folder.folderId).setValue(FirebaseFolder.create(folder))
-    }
-
-    override fun updateFolder(folder: Folder) {
-        saveFolder(folder)
-    }
-
-    override fun moveFolder(folderId: String, parentFolderId: String?) {
-        val databaseReference = rootReference.child(folderId.toString())
-        databaseReference.addListenerForSingleValueEvent(object: ValueEventListener {
+    override fun moveItem(folderId: String, parentFolderId: String?) {
+        val databaseReference = rootReference?.child(folderId.toString())
+        databaseReference?.addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
             }
 
@@ -55,9 +52,9 @@ class FoldersRemoteDataSource @Inject constructor(val firebaseDatabase: Firebase
         });
     }
 
-    override fun deleteFolders(folderIds: List<String>) {
+    override fun deleteItems(folderIds: List<String>) {
         for (id in folderIds) {
-            rootReference.child(id.toString()).removeValue()
+            rootReference?.child(id)?.removeValue()
         }
     }
 }

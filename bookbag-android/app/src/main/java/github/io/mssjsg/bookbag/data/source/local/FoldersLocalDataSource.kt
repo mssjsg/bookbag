@@ -1,55 +1,56 @@
 package github.io.mssjsg.bookbag.data.source.local
 
 import github.io.mssjsg.bookbag.data.Folder
-import github.io.mssjsg.bookbag.data.source.FoldersDataSource
-import github.io.mssjsg.bookbag.util.ItemUidGenerator
-import github.io.mssjsg.bookbag.util.executor.qualifier.DiskIoExecutor
+import github.io.mssjsg.bookbag.data.source.BookbagDataSource
+import github.io.mssjsg.bookbag.util.BookbagSchedulers
 import io.reactivex.Flowable
-import java.util.concurrent.Executor
+import io.reactivex.Observable
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Created by Sing on 27/3/2018.
  */
-class FoldersLocalDataSource @Inject constructor(@DiskIoExecutor val executor: Executor,
-                                                 val foldersDao: FoldersDao) : FoldersDataSource {
-    override fun getDirtyFolders(): Flowable<List<Folder>> {
+@Singleton
+class FoldersLocalDataSource @Inject constructor(val schedulers: BookbagSchedulers,
+                                                 val foldersDao: FoldersDao) : BookbagDataSource<Folder> {
+    override fun getDirtyItems(): Flowable<List<Folder>> {
         return foldersDao.getDirtyFolders()
     }
 
-    override fun moveFolder(folderId: String, parentFolderId: String?) {
-        executor.execute {
+    override fun moveItem(folderId: String, parentFolderId: String?) {
+        Observable.fromCallable({
             foldersDao.moveFolder(folderId, parentFolderId)
-        }
+        }).subscribeOn(schedulers.io()).subscribe()
     }
 
-    override fun getCurrentFolder(folderId: String): Flowable<Folder> {
+    override fun getItem(folderId: String): Flowable<Folder> {
         return foldersDao.getCurrentFolderByFolderId(folderId)
     }
 
-    override fun getFolders(folderId: String?): Flowable<List<Folder>> {
+    override fun getItems(folderId: String?): Flowable<List<Folder>> {
         return folderId?.let {
             foldersDao.getFoldersByParentFolderId(folderId)
         } ?: foldersDao.getHomeFolders()
     }
 
-    override fun saveFolder(folder: Folder) {
-        executor.execute {
+    override fun saveItem(folder: Folder) {
+        Observable.fromCallable({
             foldersDao.insertFolder(folder)
-        }
+        }).subscribeOn(schedulers.io()).subscribe()
     }
 
-    override fun updateFolder(folder: Folder) {
-        executor.execute {
+    override fun updateItem(folder: Folder) {
+        Observable.fromCallable({
             foldersDao.updateFolder(folder)
-        }
+        }).subscribeOn(schedulers.io()).subscribe()
     }
 
-    override fun deleteFolders(folderIds: List<String>) {
-        executor.execute {
+    override fun deleteItems(folderIds: List<String>) {
+        Observable.fromCallable({
             for (folderId in folderIds) {
                 foldersDao.deleteFolderByFolderId(folderId)
             }
-        }
+        }).subscribeOn(schedulers.io()).subscribe()
     }
 }

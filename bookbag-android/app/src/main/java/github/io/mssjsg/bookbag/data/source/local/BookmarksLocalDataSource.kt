@@ -1,55 +1,64 @@
 package github.io.mssjsg.bookbag.data.source.local
 
 import github.io.mssjsg.bookbag.data.Bookmark
-import github.io.mssjsg.bookbag.data.source.BookmarksDataSource
-import github.io.mssjsg.bookbag.util.executor.qualifier.DiskIoExecutor
+import github.io.mssjsg.bookbag.data.source.BookbagDataSource
+import github.io.mssjsg.bookbag.util.BookbagSchedulers
 import io.reactivex.Flowable
-import java.util.concurrent.Executor
+import io.reactivex.Observable
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Created by Sing on 27/3/2018.
  */
-class BookmarksLocalDataSource @Inject constructor(@DiskIoExecutor val executor: Executor,
-                                                   val bookmarksDao: BookmarksDao) : BookmarksDataSource {
-
-    fun updateBookmarkPreview(bookmarkUrl: String, imageUrl: String, title: String) {
-        executor.execute {
-            val bookmark = bookmarksDao.getBookmark(bookmarkUrl)
-            bookmarksDao.updateBookmark(bookmark.copy(imageUrl = imageUrl, name = title))
-        }
+@Singleton
+class BookmarksLocalDataSource @Inject constructor(val schedulers: BookbagSchedulers,
+                                                   val bookmarksDao: BookmarksDao) : BookbagDataSource<Bookmark> {
+    override fun getItem(id: String): Flowable<Bookmark> {
+        return bookmarksDao.getBookmark(id)
     }
 
-    override fun getDirtyBookmarks(): Flowable<List<Bookmark>> {
+    fun updateBookmarkPreview(bookmarkUrl: String, imageUrl: String, title: String) {
+        bookmarksDao.getBookmark(bookmarkUrl)
+                .firstOrError()
+                .subscribeOn(schedulers.io())
+                .subscribe({ bookmark ->
+                    bookmarksDao.updateBookmark(bookmark.copy(imageUrl = imageUrl, name = title))
+                }, {})
+    }
+
+    override fun getDirtyItems(): Flowable<List<Bookmark>> {
         return bookmarksDao.getDirtyBookmarks()
     }
 
-    override fun moveBookmark(url: String, folderId: String?) {
-        executor.execute {
+    override fun moveItem(url: String, folderId: String?) {
+        Observable.fromCallable({
             bookmarksDao.moveBookmark(url, folderId)
-        }
+        }).subscribeOn(schedulers.io()).subscribe()
     }
 
-    override fun getBookmarks(folderId: String?): Flowable<List<Bookmark>> {
-        return folderId?.let { bookmarksDao.getBookmarksByFolderId(folderId) }
+    override fun getItems(folderId: String?): Flowable<List<Bookmark>> {
+        return folderId?.let { bookmarksDao.getBookmarksByFolderId(it) }
                 ?: bookmarksDao.getHomeBookmarks()
     }
 
-    override fun deleteBookmarks(bookmarkUrls: List<String>) {
-        executor.execute {
+    override fun deleteItems(bookmarkUrls: List<String>) {
+        Observable.fromCallable({
             for (url in bookmarkUrls) {
                 bookmarksDao.deleteBookmarkByUrl(url)
             }
-        }
+        }).subscribeOn(schedulers.io()).subscribe()
     }
 
-    override fun saveBookmark(bookmark: Bookmark) {
-        executor.execute {
+    override fun saveItem(bookmark: Bookmark) {
+        Observable.fromCallable({
             bookmarksDao.insertBookmark(bookmark)
-        }
+        }).subscribeOn(schedulers.io()).subscribe()
     }
 
-    override fun updateBookmark(bookmark: Bookmark) {
-        executor.execute { bookmarksDao.updateBookmark(bookmark) }
+    override fun updateItem(bookmark: Bookmark) {
+        Observable.fromCallable({
+            bookmarksDao.updateBookmark(bookmark)
+        }).subscribeOn(schedulers.io()).subscribe()
     }
 }

@@ -5,24 +5,31 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import github.io.mssjsg.bookbag.data.Bookmark
-import github.io.mssjsg.bookbag.data.source.BookmarksDataSource
 import github.io.mssjsg.bookbag.data.source.remote.data.FirebaseBookmark
-import io.reactivex.Flowable
+import github.io.mssjsg.bookbag.user.BookbagUserData
 import java.net.URLEncoder
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class BookmarksRemoteDataSource @Inject constructor(firebaseDatabase: FirebaseDatabase): BaseRemoteDataSource<FirebaseBookmark>(firebaseDatabase, "bookmarks"), BookmarksDataSource {
-    override fun getDirtyBookmarks(): Flowable<List<Bookmark>> {
-        throw UnsupportedOperationException("not supported query dirty bookmarks")
+@Singleton
+class BookmarksRemoteDataSource @Inject constructor(firebaseDatabase: FirebaseDatabase,
+                                                    userData: BookbagUserData)
+    : RemoteDataSource<FirebaseBookmark, Bookmark>(firebaseDatabase, userData, "bookmarks") {
+    override fun getIdFromRemoteData(remoteData: FirebaseBookmark): String {
+        return remoteData.url
     }
 
-    override fun saveBookmark(bookmark: Bookmark) {
-        rootReference.child(getKey(bookmark.url)).setValue(FirebaseBookmark.create(bookmark))
+    override fun convertRemoteToLocalData(remoteData: FirebaseBookmark): Bookmark {
+        return remoteData.toLocalData()
     }
 
-    override fun moveBookmark(url: String, folderId: String?) {
-        val databaseReference = rootReference.child(url)
-        databaseReference.addListenerForSingleValueEvent(object: ValueEventListener {
+    override fun saveItem(bookmark: Bookmark) {
+        rootReference?.child(getKey(bookmark.url))?.setValue(FirebaseBookmark.create(bookmark))
+    }
+
+    override fun moveItem(url: String, folderId: String?) {
+        val databaseReference = rootReference?.child(url)
+        databaseReference?.addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
             }
 
@@ -38,18 +45,14 @@ class BookmarksRemoteDataSource @Inject constructor(firebaseDatabase: FirebaseDa
         });
     }
 
-    override fun updateBookmark(bookmark: Bookmark) {
-        saveBookmark(bookmark)
+    override fun updateItem(bookmark: Bookmark) {
+        saveItem(bookmark)
     }
 
-    override fun deleteBookmarks(bookmarkUrls: List<String>) {
+    override fun deleteItems(bookmarkUrls: List<String>) {
         for (url in bookmarkUrls) {
-            rootReference.child(getKey(url)).removeValue()
+            rootReference?.child(getKey(url))?.removeValue()
         }
-    }
-
-    override fun getBookmarks(folderId: String?): Flowable<List<Bookmark>> {
-        throw UnsupportedOperationException("not supported query bookmarks by folder id")
     }
 
     override fun getItemFromSnapshot(dataSnapshot: DataSnapshot): FirebaseBookmark? {

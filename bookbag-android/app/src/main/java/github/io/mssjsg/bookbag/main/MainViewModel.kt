@@ -4,7 +4,7 @@ import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.data.source.BookmarksRepository
 import github.io.mssjsg.bookbag.data.source.FoldersRepository
 import github.io.mssjsg.bookbag.list.ItemListViewModel
-import github.io.mssjsg.bookbag.user.BookbagUserManager
+import github.io.mssjsg.bookbag.user.BookbagUserData
 import github.io.mssjsg.bookbag.util.ItemUidGenerator
 import github.io.mssjsg.bookbag.util.linkpreview.UrlPreviewManager
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
@@ -17,8 +17,8 @@ class MainViewModel @Inject constructor(application: BookBagApplication,
                                         liveBus: LiveBus,
                                         localLiveBus: LocalLiveBus,
                                         uidGenerator: ItemUidGenerator,
-                                        bookbagUserManager: BookbagUserManager,
+                                        bookbagUserData: BookbagUserData,
                                         urlPreviewManager: UrlPreviewManager) : ItemListViewModel(application,
-        bookmarksRepository, foldersRepository, liveBus,  localLiveBus, uidGenerator, bookbagUserManager, urlPreviewManager) {
+        bookmarksRepository, foldersRepository, liveBus,  localLiveBus, uidGenerator, bookbagUserData, urlPreviewManager) {
     lateinit var mainComponent: MainComponent
 }

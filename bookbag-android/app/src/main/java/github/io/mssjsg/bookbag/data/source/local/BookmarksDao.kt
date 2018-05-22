@@ -11,7 +11,7 @@ import io.reactivex.Flowable
 interface BookmarksDao {
 
     @Query("SELECT * FROM bookmarks WHERE url = :url")
-    fun getBookmark(url: String): Bookmark
+    fun getBookmark(url: String): Flowable<Bookmark>
 
     @Query("SELECT * FROM bookmarks WHERE folder_id IS NULL")
     fun getHomeBookmarks(): Flowable<List<Bookmark>>

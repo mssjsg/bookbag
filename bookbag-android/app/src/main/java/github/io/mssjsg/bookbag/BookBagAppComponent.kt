@@ -2,6 +2,7 @@ package github.io.mssjsg.bookbag
 
 import dagger.Component
 import github.io.mssjsg.bookbag.data.DataModule
+import github.io.mssjsg.bookbag.data.SyncDataManager
 import github.io.mssjsg.bookbag.folderselection.FolderSelectionComponent
 import github.io.mssjsg.bookbag.main.MainComponent
 import github.io.mssjsg.bookbag.util.UtilModule
@@ -24,4 +25,5 @@ interface BookBagAppComponent {
     fun mainComponent(): MainComponent
 
     fun provideLiveBus(): LiveBus
+    fun provideSyncDataManager(): SyncDataManager
 }

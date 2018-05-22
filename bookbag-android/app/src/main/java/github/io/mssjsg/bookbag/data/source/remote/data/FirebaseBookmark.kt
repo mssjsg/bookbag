@@ -8,7 +8,7 @@ data class FirebaseBookmark(var url:String = "",
                             var folderId:String? = null,
                             var name:String = "",
                             var createdDate:Long = 0) {
-    fun toDbBookmark(): Bookmark {
+    fun toLocalData(): Bookmark {
         return Bookmark(url, folderId, name, null, createdDate, false)
     }
 
