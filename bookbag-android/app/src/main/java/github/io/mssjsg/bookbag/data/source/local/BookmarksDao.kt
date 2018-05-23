@@ -25,14 +25,8 @@ interface BookmarksDao {
     @Update
     fun updateBookmark(bookmark: Bookmark): Int
 
-    @Query("UPDATE bookmarks SET image_url = :imageUrl AND name = :title WHERE url = :bookmarkUrl")
-    fun updateBookmarkPreview(bookmarkUrl: String, imageUrl: String, title: String)
-
     @Query("DELETE FROM bookmarks WHERE url = :bookmarkUrl")
     fun deleteBookmarkByUrl(bookmarkUrl: String)
-
-    @Query("UPDATE bookmarks SET folder_id = :folderId AND dirty = 1 WHERE url = :url")
-    fun moveBookmark(url: String, folderId: String?)
 
     @Query("SELECT * FROM bookmarks WHERE dirty IS 1")
     fun getDirtyBookmarks(): Flowable<List<Bookmark>>

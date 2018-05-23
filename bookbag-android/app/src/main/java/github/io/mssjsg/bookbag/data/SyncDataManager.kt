@@ -60,7 +60,7 @@ class SyncDataManager @Inject constructor(val userData: BookbagUserData,
                                     localDataSource.saveItem(remoteDataSource.convertRemoteToLocalData(data))
                                 }
                             }, {
-                                Log.d(TAG, "item not found")
+                                Log.e(TAG, "item not found")
                             })
                 }
 

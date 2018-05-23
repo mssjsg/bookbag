@@ -1,15 +1,16 @@
 package github.io.mssjsg.bookbag.data.source
 
 import io.reactivex.Flowable
+import io.reactivex.Single
 
 interface BookbagDataSource<Item> {
-    fun saveItem(item: Item)
+    fun saveItem(item: Item): Single<String>
 
-    fun moveItem(id: String, folderId: String?)
+    fun moveItem(id: String, folderId: String?): Single<Int>
 
-    fun updateItem(item: Item)
+    fun updateItem(item: Item): Single<String>
 
-    fun deleteItems(ids: List<String>)
+    fun deleteItems(ids: List<String>): Single<Int>
 
     fun getItem(id: String): Flowable<Item>
 

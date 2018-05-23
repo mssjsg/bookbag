@@ -4,6 +4,8 @@ import com.google.firebase.database.*
 import github.io.mssjsg.bookbag.data.source.BookbagDataSource
 import github.io.mssjsg.bookbag.user.BookbagUserData
 import io.reactivex.Flowable
+import io.reactivex.Observable
+import io.reactivex.Single
 import java.util.concurrent.CopyOnWriteArraySet
 
 abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: FirebaseDatabase,
@@ -31,11 +33,79 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
         })
     }
 
-    protected abstract fun getItemFromSnapshot(dataSnapshot: DataSnapshot): RemoteData?
+    override final fun saveItem(localData: LocalData): Single<String> {
+        return Single.create({ emitter ->
+            rootReference?.child(getIdFromLocalData(localData))?.setValue(convertLocalToRemoteData(localData))
+                    ?.addOnCompleteListener({ task ->
+                if (task.isSuccessful) {
+                    emitter.onSuccess(getIdFromLocalData(localData))
+                } else {
+                    task.exception?.let { emitter.onError(it) }
+                }
+            })
+        })
+    }
+
+    override final fun moveItem(itemId: String, parentFolderId: String?): Single<Int> {
+        return Single.create({ emitter ->
+            val databaseReference = rootReference?.child(itemId)
+            databaseReference?.addListenerForSingleValueEvent(object: ValueEventListener {
+                override fun onCancelled(databaseError: DatabaseError?) {
+                }
+
+                override fun onDataChange(dataSnapshot: DataSnapshot?) {
+                    dataSnapshot?.let {
+                        val firebaseItem = getItemFromSnapshot(dataSnapshot)
+                        firebaseItem?.let {
+                            val newFirebaseItem = createRemoteDataWithParentFolderId(firebaseItem, parentFolderId)
+                            databaseReference.setValue(newFirebaseItem).addOnCompleteListener({ task ->
+                                if (task.isSuccessful) {
+                                    emitter.onSuccess(1)
+                                } else {
+                                    task.exception?.let { emitter.onError(it) }
+                                }
+                            })
+                        }
+                    }
+                }
+            });
+        })
+    }
+
+    override final fun deleteItems(itemsIds: List<String>): Single<Int> {
+        return Observable.fromIterable(itemsIds).flatMap({ id ->
+            Observable.create<Boolean>({ emitter ->
+                rootReference?.child(id)?.removeValue()?.addOnCompleteListener({
+                    emitter.onNext(it.isSuccessful)
+                    emitter.onComplete()
+                })
+            })
+        }).filter({ it }).count().map { it as Int }
+    }
+
+    override final fun getItem(id: String): Flowable<LocalData> {
+        throw UnsupportedOperationException("not supported query item")
+    }
+
+    override final fun getDirtyItems(): Flowable<List<LocalData>> {
+        throw UnsupportedOperationException("not supported query dirty items")
+    }
+
+    override final fun getItems(folderId: String?): Flowable<List<LocalData>> {
+        throw UnsupportedOperationException("not supported query items by id")
+    }
+
+    abstract fun getItemFromSnapshot(dataSnapshot: DataSnapshot): RemoteData?
 
     abstract fun convertRemoteToLocalData(remoteData: RemoteData): LocalData
 
+    abstract fun convertLocalToRemoteData(localData: LocalData): RemoteData
+
     abstract fun getIdFromRemoteData(remoteData: RemoteData): String
+
+    abstract fun getIdFromLocalData(localData: LocalData): String
+
+    abstract fun createRemoteDataWithParentFolderId(remoteData: RemoteData, parentFolderId: String?): RemoteData
 
     private inner class ChildListener : ChildEventListener {
 
@@ -64,18 +134,6 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
         override fun onCancelled(databaseError: DatabaseError) {
             //do nothing
         }
-    }
-
-    override final fun getItem(id: String): Flowable<LocalData> {
-        throw UnsupportedOperationException("not supported query item")
-    }
-
-    override final fun getDirtyItems(): Flowable<List<LocalData>> {
-        throw UnsupportedOperationException("not supported query dirty items")
-    }
-
-    override final fun getItems(folderId: String?): Flowable<List<LocalData>> {
-        throw UnsupportedOperationException("not supported query items by id")
     }
 
     interface OnRemoteDataChangedListener<DataType> {

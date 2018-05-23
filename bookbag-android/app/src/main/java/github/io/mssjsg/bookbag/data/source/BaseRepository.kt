@@ -2,6 +2,7 @@ package github.io.mssjsg.bookbag.data.source
 
 import github.io.mssjsg.bookbag.data.source.remote.RemoteDataSource
 import io.reactivex.Flowable
+import io.reactivex.Single
 import javax.inject.Inject
 
 open class BaseRepository<RemoteData, LocalData> @Inject constructor(val localDataSource: BookbagDataSource<LocalData>,
@@ -14,25 +15,27 @@ open class BaseRepository<RemoteData, LocalData> @Inject constructor(val localDa
         return localDataSource.getDirtyItems()
     }
 
-    override fun moveItem(url: String, folderId: String?) {
-        localDataSource.moveItem(url, folderId)
+    override fun moveItem(url: String, folderId: String?): Single<Int> {
+        return localDataSource.moveItem(url, folderId)
     }
 
     override fun getItems(folderId: String?): Flowable<List<LocalData>> {
         return localDataSource.getItems(folderId)
     }
 
-    override fun deleteItems(bookmarkUrls: List<String>) {
-        localDataSource.deleteItems(bookmarkUrls)
-        remoteDataSource.deleteItems(bookmarkUrls)
+    override fun deleteItems(bookmarkUrls: List<String>): Single<Int> {
+        return Single.zip(listOf(localDataSource.deleteItems(bookmarkUrls),
+        remoteDataSource.deleteItems(bookmarkUrls)), {
+          it.get(0) as Int
+        })
     }
 
-    override fun saveItem(bookmark: LocalData) {
-        localDataSource.saveItem(bookmark)
+    override fun saveItem(bookmark: LocalData): Single<String> {
+        return localDataSource.saveItem(bookmark)
     }
 
-    override fun updateItem(bookmark: LocalData) {
-        localDataSource.updateItem(bookmark)
+    override fun updateItem(bookmark: LocalData): Single<String> {
+        return localDataSource.updateItem(bookmark)
     }
 
 }
