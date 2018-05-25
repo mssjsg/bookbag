@@ -17,10 +17,10 @@ import github.io.mssjsg.bookbag.databinding.ActivityMainBinding
 import github.io.mssjsg.bookbag.list.*
 import github.io.mssjsg.bookbag.folderselection.FolderSelectionActivity
 import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
-import github.io.mssjsg.bookbag.util.getFolderId
-import github.io.mssjsg.bookbag.util.getSharedUrl
-import github.io.mssjsg.bookbag.util.putFilteredFolderIds
-import github.io.mssjsg.bookbag.util.putFolderId
+import github.io.mssjsg.bookbag.util.extension.getFolderId
+import github.io.mssjsg.bookbag.util.extension.getSharedUrl
+import github.io.mssjsg.bookbag.util.extension.putFilteredFolderIds
+import github.io.mssjsg.bookbag.util.extension.putFolderId
 import github.io.mssjsg.bookbag.widget.SimpleConfirmDialogFragment
 import github.io.mssjsg.bookbag.widget.SimpleInputDialogFragment
 import java.util.*

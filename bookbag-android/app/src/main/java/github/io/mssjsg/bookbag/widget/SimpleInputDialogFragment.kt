@@ -8,7 +8,7 @@ import android.support.v4.app.DialogFragment
 import android.view.LayoutInflater
 import android.widget.EditText
 import github.io.mssjsg.bookbag.R
-import github.io.mssjsg.bookbag.util.getAppComponent
+import github.io.mssjsg.bookbag.util.extension.getAppComponent
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.util.livebus.LiveEvent
 

@@ -6,9 +6,6 @@ import github.io.mssjsg.bookbag.data.DataModule
 import github.io.mssjsg.bookbag.util.executor.ExecutorModule
 import android.support.multidex.MultiDex
 
-
-
-
 /**
  * Created by Sing on 27/3/2018.
  */

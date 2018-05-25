@@ -4,8 +4,8 @@ import android.os.Bundle
 import github.io.mssjsg.bookbag.BookbagActivity
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.folderselection.FolderSelectionActivity
-import github.io.mssjsg.bookbag.util.getFilteredFolderIds
-import github.io.mssjsg.bookbag.util.getFolderId
+import github.io.mssjsg.bookbag.util.extension.getFilteredFolderIds
+import github.io.mssjsg.bookbag.util.extension.getFolderId
 
 abstract class ItemListActivity<VM: ItemListViewModel> : BookbagActivity(), ItemListViewModelProvider {
     protected lateinit var viewModel: VM

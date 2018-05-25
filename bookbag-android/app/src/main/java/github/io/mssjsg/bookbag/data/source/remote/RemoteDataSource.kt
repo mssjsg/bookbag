@@ -3,6 +3,7 @@ package github.io.mssjsg.bookbag.data.source.remote
 import com.google.firebase.database.*
 import github.io.mssjsg.bookbag.data.source.BookbagDataSource
 import github.io.mssjsg.bookbag.user.BookbagUserData
+import github.io.mssjsg.bookbag.util.extension.encodeForFirebaseKey
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -34,11 +35,12 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
     }
 
     override final fun saveItem(localData: LocalData): Single<String> {
+        val key = getIdFromLocalData(localData).encodeForFirebaseKey()
         return Single.create({ emitter ->
-            rootReference?.child(getIdFromLocalData(localData))?.setValue(convertLocalToRemoteData(localData))
+            rootReference?.child(key)?.setValue(convertLocalToRemoteData(localData))
                     ?.addOnCompleteListener({ task ->
                 if (task.isSuccessful) {
-                    emitter.onSuccess(getIdFromLocalData(localData))
+                    emitter.onSuccess(key)
                 } else {
                     task.exception?.let { emitter.onError(it) }
                 }
@@ -47,8 +49,9 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
     }
 
     override final fun moveItem(itemId: String, parentFolderId: String?): Single<Int> {
+        val key = itemId.encodeForFirebaseKey()
         return Single.create({ emitter ->
-            val databaseReference = rootReference?.child(itemId)
+            val databaseReference = rootReference?.child(key)
             databaseReference?.addListenerForSingleValueEvent(object: ValueEventListener {
                 override fun onCancelled(databaseError: DatabaseError?) {
                 }
@@ -74,13 +77,14 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
 
     override final fun deleteItems(itemsIds: List<String>): Single<Int> {
         return Observable.fromIterable(itemsIds).flatMap({ id ->
+            val key = id.encodeForFirebaseKey()
             Observable.create<Boolean>({ emitter ->
-                rootReference?.child(id)?.removeValue()?.addOnCompleteListener({
+                rootReference?.child(key)?.removeValue()?.addOnCompleteListener({
                     emitter.onNext(it.isSuccessful)
                     emitter.onComplete()
                 })
             })
-        }).filter({ it }).count().map { it as Int }
+        }).filter({ it }).toList().map { it -> it.size }
     }
 
     override final fun getItem(id: String): Flowable<LocalData> {

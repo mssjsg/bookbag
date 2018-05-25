@@ -1,9 +1,8 @@
 @file:JvmName("IntentUtils")
 @file:JvmMultifileClass
 
-package github.io.mssjsg.bookbag.util
+package github.io.mssjsg.bookbag.util.extension
 import android.content.Intent
-import github.io.mssjsg.bookbag.list.ItemListActivity
 
 const val INTENT_EXTRA_FOLDER_ID = "github.io.mssjsg.bookbag.list.EXTRA_FOLDER_ID"
 const val INTENT_EXTRA_FILTERED_FOLDER_IDS = "github.io.mssjsg.bookbag.list.INTENT_EXTRA_FILTERED_FOLDER_IDS"

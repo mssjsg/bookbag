@@ -23,9 +23,9 @@ open class BaseRepository<RemoteData, LocalData> @Inject constructor(val localDa
         return localDataSource.getItems(folderId)
     }
 
-    override fun deleteItems(bookmarkUrls: List<String>): Single<Int> {
-        return Single.zip(listOf(localDataSource.deleteItems(bookmarkUrls),
-        remoteDataSource.deleteItems(bookmarkUrls)), {
+    override fun deleteItems(ids: List<String>): Single<Int> {
+        return Single.zip(listOf(localDataSource.deleteItems(ids),
+        remoteDataSource.deleteItems(ids)), {
           it.get(0) as Int
         })
     }

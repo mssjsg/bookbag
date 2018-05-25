@@ -12,7 +12,7 @@ import github.io.mssjsg.bookbag.BookBagAppComponent
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.databinding.ActivityMainBinding
 import github.io.mssjsg.bookbag.list.ItemListActivity
-import github.io.mssjsg.bookbag.util.putFolderId
+import github.io.mssjsg.bookbag.util.extension.putFolderId
 
 class FolderSelectionActivity: ItemListActivity<FolderSelectionViewModel>() {
     companion object {

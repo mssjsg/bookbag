@@ -1,4 +1,4 @@
-package github.io.mssjsg.bookbag.util
+package github.io.mssjsg.bookbag.util.extension
 
 import android.support.v4.app.Fragment
 import github.io.mssjsg.bookbag.BookBagAppComponent

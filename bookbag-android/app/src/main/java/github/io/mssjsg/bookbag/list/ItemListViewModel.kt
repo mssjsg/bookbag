@@ -3,7 +3,6 @@ package github.io.mssjsg.bookbag.list
 import android.arch.lifecycle.AndroidViewModel
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
-import android.util.Log
 import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.ViewModelScope
@@ -18,6 +17,7 @@ import github.io.mssjsg.bookbag.list.listitem.ListItem
 import github.io.mssjsg.bookbag.user.BookbagUserData
 import github.io.mssjsg.bookbag.util.BookbagSchedulers
 import github.io.mssjsg.bookbag.util.ItemUidGenerator
+import github.io.mssjsg.bookbag.util.Logger
 import github.io.mssjsg.bookbag.util.linkpreview.JsoupWebPageCrawler
 import github.io.mssjsg.bookbag.util.linkpreview.LinkPreviewException
 import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
@@ -27,6 +27,7 @@ import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 import io.reactivex.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
+import io.reactivex.functions.Function
 import javax.inject.Inject
 
 
@@ -36,6 +37,7 @@ import javax.inject.Inject
 @ViewModelScope
 open class ItemListViewModel @Inject constructor(val application: BookBagApplication,
                                                  val schedulers: BookbagSchedulers,
+                                                 val logger: Logger,
                                                  val bookmarksRepository: BookmarksRepository,
                                                  val foldersRepository: FoldersRepository,
                                                  val liveBus: LiveBus,
@@ -83,9 +85,9 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
             } catch (e: LinkPreviewException) { }
             bookmarksRepository.updateBookmarkPreview(bookmarkListItem.url, previewUrl, title)
         }).compose(applySchedulersOnObservable()).subscribe({
-            Log.d(TAG, "set image preview on: ${bookmarkListItem.url}")
+            logger.d(TAG, "set image preview on: ${bookmarkListItem.url}")
         }, {
-            Log.e(TAG, "failed to set image preview on ${bookmarkListItem.url}")
+            logger.e(TAG, "failed to set image preview on ${bookmarkListItem.url}")
         }))
     }
 
@@ -198,9 +200,9 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                         folderId = currentFolderId))
                         .compose(applySchedulersOnSingle())
                         .subscribe({
-                            Log.d(TAG, "bookmark saved: $url")
+                            logger.d(TAG, "bookmark saved: $url")
                         }, {
-                            Log.e(TAG, "failed to save bookmark")
+                            logger.e(TAG, "failed to save bookmark")
                         })
             }
         }
@@ -211,9 +213,9 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         foldersRepository.saveItem(Folder(folderId = folderId,
                 name = folderName, parentFolderId = currentFolderId)).compose(applySchedulersOnSingle())
                 .subscribe({
-                    Log.d(TAG, "folder saved: $folderName")
+                    logger.d(TAG, "folder saved: $folderName")
                 }, {
-                    Log.e(TAG, "failed to save folder")
+                    logger.e(TAG, "failed to save folder")
                 })
     }
 
@@ -228,21 +230,41 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                 }
             }
         }
-        bookmarksRepository.deleteItems(selectedUrls).compose(applySchedulersOnSingle())
-                .subscribe({
-                    Log.d(TAG, "bookmarks deleted count: $it")
-                }, {
-                    Log.e(TAG, "failed to delete bookmarks")
-                })
-        foldersRepository.deleteItems(selectedFolderIds).compose(applySchedulersOnSingle())
-                .subscribe({
-                    Log.d(TAG, "folders deleted count: $it")
-                }, {
-                    Log.e(TAG, "failed to delete folders")
+
+        deleteItemsRecursively(selectedUrls, selectedFolderIds)
+                .compose(applySchedulersOnSingle()).subscribe({
+                    logger.d(TAG, "items deleted")
+                }, { throwable ->
+                    logger.e(TAG, "failed to delete items", throwable)
                 })
     }
 
-
+    private fun deleteItemsRecursively(urls: List<String>, folderIds: List<String>): Single<Int> {
+        return bookmarksRepository.deleteItems(urls).flatMap {
+            if (folderIds.size > 0) {
+                foldersRepository.deleteItems(folderIds).flatMap {
+                    Single.zip(folderIds.map({ folderId ->
+                        var folders: List<Folder> = emptyList()
+                        var bookmarks: List<Bookmark> = emptyList()
+                        Single.zip(
+                                foldersRepository.getItems(folderId).first(emptyList()),
+                                bookmarksRepository.getItems(folderId).first(emptyList()),
+                                object : BiFunction<List<Folder>, List<Bookmark>, Unit> {
+                                    override fun apply(folderList: List<Folder>, bookmarkList: List<Bookmark>) {
+                                        folders = folderList
+                                        bookmarks = bookmarkList
+                                    }
+                                }
+                        ).flatMap {
+                            deleteItemsRecursively(bookmarks.map { it.url }, folders.map { it.folderId })
+                        }
+                    }), { 0 })
+                }
+            } else {
+                Single.just(0)
+            }
+        }
+    }
 
     fun getItemViewType(position: Int): Int {
         return getListItem(position)?.let {
@@ -303,18 +325,18 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         selectedBookmarkUrls.forEach({ url ->
             bookmarksRepository.moveItem(url, targetFolderId).compose(applySchedulersOnSingle())
                 .subscribe({
-                    Log.d(TAG, "moved bookmark $url")
+                    logger.d(TAG, "moved bookmark $url")
                 }, {
-                    Log.e(TAG, "failed to move bookmark $url")
+                    logger.e(TAG, "failed to move bookmark $url")
                 })
         })
 
         selectedFolderIds.forEach({ url ->
             foldersRepository.moveItem(url, targetFolderId).compose(applySchedulersOnSingle())
                     .subscribe({
-                        Log.d(TAG, "moved folder $url")
+                        logger.d(TAG, "moved folder $url")
                     }, {
-                        Log.e(TAG, "failed to move folder $url")
+                        logger.e(TAG, "failed to move folder $url")
                     })
         })
     }
