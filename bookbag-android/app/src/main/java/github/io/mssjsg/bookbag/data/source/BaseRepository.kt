@@ -31,11 +31,17 @@ open class BaseRepository<RemoteData, LocalData> @Inject constructor(val localDa
     }
 
     override fun saveItem(bookmark: LocalData): Single<String> {
-        return localDataSource.saveItem(bookmark)
+        return Single.zip(arrayListOf(localDataSource.saveItem(bookmark),
+                remoteDataSource.saveItem(bookmark)), {
+            it.get(0) as String
+        })
     }
 
     override fun updateItem(bookmark: LocalData): Single<String> {
-        return localDataSource.updateItem(bookmark)
+        return Single.zip(arrayListOf(localDataSource.updateItem(bookmark),
+                remoteDataSource.updateItem(bookmark)), {
+            it.get(0) as String
+        })
     }
 
 }
