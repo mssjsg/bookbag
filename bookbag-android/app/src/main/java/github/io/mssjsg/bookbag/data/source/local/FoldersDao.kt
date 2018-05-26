@@ -28,7 +28,7 @@ interface FoldersDao {
     @Update
     fun updateFolder(folder: Folder): Int
 
-    @Query("DELETE FROM folders WHERE folder_id = :folderId OR parent_folder_id = :folderId")
+    @Query("DELETE FROM folders WHERE folder_id = :folderId")
     fun deleteFolderByFolderId(folderId: String)
 
     @Query("UPDATE folders SET parent_folder_id = :parentFolderId AND dirty = 1 WHERE folder_id = :folderId")

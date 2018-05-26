@@ -233,7 +233,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
 
         deleteItemsRecursively(selectedUrls, selectedFolderIds)
                 .compose(applySchedulersOnSingle()).subscribe({
-                    logger.d(TAG, "items deleted")
+                    logger.d(TAG, "items deleted count: $it")
                 }, { throwable ->
                     logger.e(TAG, "failed to delete items", throwable)
                 })
@@ -244,25 +244,26 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
             if (folderIds.size > 0) {
                 foldersRepository.deleteItems(folderIds).flatMap {
                     Single.zip(folderIds.map({ folderId ->
-                        var folders: List<Folder> = emptyList()
-                        var bookmarks: List<Bookmark> = emptyList()
-                        Single.zip(
-                                foldersRepository.getItems(folderId).first(emptyList()),
-                                bookmarksRepository.getItems(folderId).first(emptyList()),
-                                object : BiFunction<List<Folder>, List<Bookmark>, Unit> {
-                                    override fun apply(folderList: List<Folder>, bookmarkList: List<Bookmark>) {
-                                        folders = folderList
-                                        bookmarks = bookmarkList
+                        Single.zip<List<Folder>, List<Bookmark>, Pair<List<Bookmark>, List<Folder>>>(
+                                foldersRepository.getItems(folderId).firstOrError(),
+                                bookmarksRepository.getItems(folderId).firstOrError(),
+                                object : BiFunction<List<Folder>, List<Bookmark>, Pair<List<Bookmark>, List<Folder>>> {
+                                    override fun apply(folderList: List<Folder>, bookmarkList: List<Bookmark>): Pair<List<Bookmark>, List<Folder>> {
+                                        return Pair(bookmarkList, folderList)
                                     }
                                 }
-                        ).flatMap {
-                            deleteItemsRecursively(bookmarks.map { it.url }, folders.map { it.folderId })
+                        ).flatMap { pair ->
+                            deleteItemsRecursively(pair.first.map { it.url }, pair.second.map { it.folderId })
                         }
-                    }), { 0 })
+                    }), {
+                        it.sumBy { it as Int }
+                    })
                 }
             } else {
                 Single.just(0)
             }
+        }.map { folderContentSize ->
+            urls.size + folderIds.size + folderContentSize
         }
     }
 
