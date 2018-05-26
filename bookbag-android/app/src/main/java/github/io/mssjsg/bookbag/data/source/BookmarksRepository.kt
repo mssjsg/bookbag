@@ -13,13 +13,6 @@ import javax.inject.Singleton
  * Created by Sing on 27/3/2018.
  */
 @Singleton
-class BookmarksRepository @Inject constructor(val bookmarksLocalDataSource: BookmarksLocalDataSource,
-                          bookmarksRemoteDataSource: BookmarksRemoteDataSource): BaseRepository<FirebaseBookmark, Bookmark>(bookmarksLocalDataSource, bookmarksRemoteDataSource) {
-    override fun getItem(id: String): Flowable<Bookmark> {
-        return localDataSource.getItem(id)
-    }
-
-    fun updateBookmarkPreview(bookmarkUrl: String, imageUrl: String, title: String): Single<Bookmark> {
-        return bookmarksLocalDataSource.updateBookmarkPreview(bookmarkUrl, imageUrl, title)
-    }
-}
+class BookmarksRepository @Inject constructor(bookmarksLocalDataSource: BookmarksLocalDataSource,
+                          bookmarksRemoteDataSource: BookmarksRemoteDataSource):
+        BaseRepository<FirebaseBookmark, Bookmark>(bookmarksLocalDataSource, bookmarksRemoteDataSource)

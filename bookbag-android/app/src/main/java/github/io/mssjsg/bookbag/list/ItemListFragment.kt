@@ -2,9 +2,7 @@ package github.io.mssjsg.bookbag.list
 
 import android.arch.lifecycle.Observer
 import android.content.Context
-import android.content.Intent
 import android.databinding.DataBindingUtil
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.DividerItemDecoration
@@ -14,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.databinding.FragmentListBinding
-import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 
 class ItemListFragment : Fragment() {

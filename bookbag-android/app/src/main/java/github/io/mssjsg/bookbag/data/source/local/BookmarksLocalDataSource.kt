@@ -16,20 +16,12 @@ class BookmarksLocalDataSource @Inject constructor(val bookmarksDao: BookmarksDa
         return bookmarksDao.getBookmark(id)
     }
 
-    fun updateBookmarkPreview(bookmarkUrl: String, imageUrl: String, title: String): Single<Bookmark> {
-        return bookmarksDao.getBookmark(bookmarkUrl)
-                .firstOrError().map { bookmark ->
-                    bookmarksDao.updateBookmark(bookmark.copy(imageUrl = imageUrl, name = title, dirty = true))
-                    bookmark
-                }
-    }
-
     override fun getDirtyItems(): Flowable<List<Bookmark>> {
         return bookmarksDao.getDirtyBookmarks()
     }
 
-    override fun moveItem(url: String, folderId: String?): Single<Int> {
-        return bookmarksDao.getBookmark(url)
+    override fun moveItem(id: String, folderId: String?): Single<Int> {
+        return bookmarksDao.getBookmark(id)
                 .firstOrError()
                 .map { bookmark ->
                     bookmarksDao.updateBookmark(bookmark.copy(folderId = folderId, dirty = true))
@@ -41,25 +33,25 @@ class BookmarksLocalDataSource @Inject constructor(val bookmarksDao: BookmarksDa
                 ?: bookmarksDao.getHomeBookmarks()
     }
 
-    override fun deleteItems(bookmarkUrls: List<String>): Single<Int> {
+    override fun deleteItems(ids: List<String>): Single<Int> {
         return Single.fromCallable({
-            bookmarkUrls.onEach { url ->
+            ids.onEach { url ->
                 bookmarksDao.deleteBookmarkByUrl(url)
             }.size
         })
     }
 
-    override fun saveItem(bookmark: Bookmark): Single<String> {
+    override fun saveItem(item: Bookmark): Single<String> {
         return Single.fromCallable({
-            bookmarksDao.insertBookmark(bookmark)
-            bookmark.url
+            bookmarksDao.insertBookmark(item)
+            item.url
         })
     }
 
-    override fun updateItem(bookmark: Bookmark): Single<String> {
+    override fun updateItem(item: Bookmark): Single<String> {
         return Single.fromCallable({
-            bookmarksDao.updateBookmark(bookmark)
-            bookmark.url
+            bookmarksDao.updateBookmark(item)
+            item.url
         })
     }
 }

@@ -10,6 +10,7 @@ import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.data.source.BookmarksRepository
 import github.io.mssjsg.bookbag.data.source.FoldersRepository
+import github.io.mssjsg.bookbag.interactor.itemlist.LoadPreviewInteractor
 import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderPathItem
@@ -19,7 +20,6 @@ import github.io.mssjsg.bookbag.util.BookbagSchedulers
 import github.io.mssjsg.bookbag.util.ItemUidGenerator
 import github.io.mssjsg.bookbag.util.Logger
 import github.io.mssjsg.bookbag.util.linkpreview.JsoupWebPageCrawler
-import github.io.mssjsg.bookbag.util.linkpreview.LinkPreviewException
 import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
 import github.io.mssjsg.bookbag.util.linkpreview.UrlPreviewManager
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
@@ -43,7 +43,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                                                  val localLiveBus: LocalLiveBus,
                                                  val uidGenerator: ItemUidGenerator,
                                                  val bookbagUserData: BookbagUserData,
-                                                 val urlPreviewManager: UrlPreviewManager) : AndroidViewModel(application) {
+                                                 val loadPreviewInteractor: LoadPreviewInteractor) : AndroidViewModel(application) {
 
     var isInMultiSelectionMode = false
         set(value) {
@@ -73,20 +73,6 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         private set
         get() = items.filter { it.isSelected }.size
 
-    fun loadPreview(bookmarkListItem: BookmarkListItem) {
-        disposables.add(Single.fromCallable({
-            urlPreviewManager.get(bookmarkListItem.url)
-        }).flatMap { item ->
-            val previewUrl = item.previewUrl
-            val title = item.title
-            bookmarksRepository.updateBookmarkPreview(bookmarkListItem.url, previewUrl, title)
-        }.compose(applySchedulersOnSingle()).subscribe({
-            logger.d(TAG, "set image preview on: ${bookmarkListItem.url}")
-        }, {
-            logger.e(TAG, "failed to set image preview on ${bookmarkListItem.url}")
-        }))
-    }
-
     fun loadCurrentFolder() {
         items.clear()
         paths.clear()
@@ -103,8 +89,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                 bookmarksRepository.getItems(currentFolderId).map {
                     val items = arrayListOf<BookmarkListItem>()
                     for (bookmark: Bookmark in it) {
-                        val bookmarkListItem = BookmarkListItem(bookmark.name, bookmark.url,
-                                bookmark.folderId, bookmark.imageUrl)
+                        val bookmarkListItem = BookmarkListItem.createItem(bookmark)
                         items.add(bookmarkListItem)
                     }
                     items
@@ -112,18 +97,11 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
             } else {
                 Flowable.just(ArrayList())
             }
-        }.doOnNext({
-            for (bookmarkListItem in it) {
-                if(bookmarkListItem.imageUrl == null) {
-                    loadPreview(bookmarkListItem)
-                }
-            }
-        }), foldersRepository.getItems(currentFolderId).map {
+        }, foldersRepository.getItems(currentFolderId).map {
             val items = arrayListOf<FolderListItem>()
             for (folder: Folder in it) {
-                val item = FolderListItem(folder.name, folderId = folder.folderId,
-                        parentFolderId = folder.parentFolderId)
-                folder.folderId?.let {
+                val item = FolderListItem.createItem(folder)
+                folder.folderId.let {
                     item.isFiltered = filteredFolders.contains(it)
                 }
 
@@ -170,6 +148,29 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     fun getListItem(position: Int): ListItem? {
         return items.run {
             if (size > position) get(position) else null
+        }
+    }
+
+    fun loadPreview(position: Int) {
+        items.get(position)?.let { item ->
+            if (item is BookmarkListItem) {
+                disposables.add(loadPreviewInteractor.getSingle(item.url)
+                        .compose(applySchedulersOnSingle())
+                        .subscribe({ bookmark ->
+                            logger.d(TAG, "set image preview on: ${item.url}")
+                            for (i in items.indices) {
+                                val currentItem = items[i]
+                                if (currentItem is BookmarkListItem && currentItem.url == item.url) {
+                                    var newListItem = currentItem.copy(imageUrl = bookmark.imageUrl,
+                                            name = bookmark.name)
+                                    items.set(i, newListItem)
+                                    break
+                                }
+                            }
+                        }, {
+                            logger.e(TAG, "failed to set image preview on ${item.url}")
+                        }))
+            }
         }
     }
 

@@ -24,7 +24,12 @@ class MainListAdapter(val itemListViewModel: ItemListViewModel) : RecyclerView.A
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val listItem = itemListViewModel.getListItem(position)
         when(holder) {
-            is BookmarkListItemViewHolder -> holder.listItem = listItem as BookmarkListItem
+            is BookmarkListItemViewHolder -> {
+                holder.listItem = listItem as BookmarkListItem
+                if (listItem.name.isEmpty()) {
+                    itemListViewModel.loadPreview(position)
+                }
+            }
             is FolderListItemViewHolder -> holder.listItem = listItem as FolderListItem
         }
     }
