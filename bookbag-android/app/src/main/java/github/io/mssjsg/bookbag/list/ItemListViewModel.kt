@@ -10,7 +10,9 @@ import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.data.source.BookmarksRepository
 import github.io.mssjsg.bookbag.data.source.FoldersRepository
+import github.io.mssjsg.bookbag.interactor.itemlist.LoadFolderPathsInteractor
 import github.io.mssjsg.bookbag.interactor.itemlist.LoadPreviewInteractor
+import github.io.mssjsg.bookbag.interactor.itemlist.LoadListItemsInteractor
 import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderPathItem
@@ -21,7 +23,6 @@ import github.io.mssjsg.bookbag.util.ItemUidGenerator
 import github.io.mssjsg.bookbag.util.Logger
 import github.io.mssjsg.bookbag.util.linkpreview.JsoupWebPageCrawler
 import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
-import github.io.mssjsg.bookbag.util.linkpreview.UrlPreviewManager
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 import io.reactivex.*
@@ -43,7 +44,9 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                                                  val localLiveBus: LocalLiveBus,
                                                  val uidGenerator: ItemUidGenerator,
                                                  val bookbagUserData: BookbagUserData,
-                                                 val loadPreviewInteractor: LoadPreviewInteractor) : AndroidViewModel(application) {
+                                                 val loadPreviewInteractor: LoadPreviewInteractor,
+                                                 val loadListItemsInteractor: LoadListItemsInteractor,
+                                                 val loadFoldersPathsInteractor: LoadFolderPathsInteractor) : AndroidViewModel(application) {
 
     var isInMultiSelectionMode = false
         set(value) {
@@ -83,66 +86,23 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
 
         disposables = CompositeDisposable()
 
-        disposables.add(Flowable.combineLatest(Flowable.just(isShowingBookmarks).flatMap {
-            isShowingBookmarks ->
-            if (isShowingBookmarks) {
-                bookmarksRepository.getItems(currentFolderId).map {
-                    val items = arrayListOf<BookmarkListItem>()
-                    for (bookmark: Bookmark in it) {
-                        val bookmarkListItem = BookmarkListItem.createItem(bookmark)
-                        items.add(bookmarkListItem)
-                    }
-                    items
-                }
-            } else {
-                Flowable.just(ArrayList())
-            }
-        }, foldersRepository.getItems(currentFolderId).map {
-            val items = arrayListOf<FolderListItem>()
-            for (folder: Folder in it) {
-                val item = FolderListItem.createItem(folder)
-                folder.folderId.let {
-                    item.isFiltered = filteredFolders.contains(it)
-                }
+        currentFolderId?.let {
+            disposables.add(foldersRepository.getItem(it).subscribe({
+                currentFolder = it
+            }))
+        }
 
-                items.add(item)
-            }
-            items
-        }, BiFunction<List<ListItem>, List<ListItem>, List<ListItem>> { bookmarks, folders ->
-            val items: MutableList<ListItem> = ArrayList()
-            items.addAll(folders)
-            items.addAll(bookmarks)
-            items
-        }).compose(applySchedulersOnFlowable()).subscribe { listItems ->
+        disposables.add(loadListItemsInteractor.getFlowable(LoadListItemsInteractor.Param(currentFolderId, filteredFolders))
+                .compose(applySchedulersOnFlowable()).subscribe { listItems ->
             items.clear()
             items.addAll(listItems)
         })
 
-        disposables.add(getFolders(currentFolderId).map {
-            it.map {
-                FolderPathItem(it.name, it.folderId)
-            }
-        }.compose(applySchedulersOnSingle()).subscribe {
+        disposables.add(loadFoldersPathsInteractor.getSingle(currentFolderId).compose(applySchedulersOnSingle()).subscribe {
             folderPathItems ->
             paths.clear()
             paths.addAll(folderPathItems)
         })
-    }
-
-    private fun getFolders(folderId: String?, folderPathItems: MutableList<Folder> = ArrayList()): Single<List<Folder>> {
-        folderId?.let {
-            return foldersRepository.getItem(it).firstOrError().doAfterSuccess {
-                if (it.folderId == currentFolderId) {
-                    currentFolder = it
-                }
-            }.flatMap {
-                folderPathItems.add(0, it)
-                getFolders(it.parentFolderId, folderPathItems)
-            }
-        } ?:let {
-            folderPathItems.add(0, Folder("", application.getString(R.string.path_home)))
-            return Single.just(folderPathItems)
-        }
     }
 
     fun getListItem(position: Int): ListItem? {

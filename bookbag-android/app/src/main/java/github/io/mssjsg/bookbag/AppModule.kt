@@ -17,7 +17,12 @@ class AppModule(val application: BookBagApplication) {
     }
 
     @Provides
-    fun providesApplication(): BookBagApplication {
+    fun providesApplication(): Application {
+        return application
+    }
+
+    @Provides
+    fun providesBookBagApplication(): BookBagApplication {
         return application
     }
 }
