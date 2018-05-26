@@ -5,6 +5,7 @@ import github.io.mssjsg.bookbag.data.source.local.BookmarksLocalDataSource
 import github.io.mssjsg.bookbag.data.source.remote.BookmarksRemoteDataSource
 import github.io.mssjsg.bookbag.data.source.remote.data.FirebaseBookmark
 import io.reactivex.Flowable
+import io.reactivex.Single
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,7 +19,7 @@ class BookmarksRepository @Inject constructor(val bookmarksLocalDataSource: Book
         return localDataSource.getItem(id)
     }
 
-    fun updateBookmarkPreview(bookmarkUrl: String, imageUrl: String, title: String) {
-        bookmarksLocalDataSource.updateBookmarkPreview(bookmarkUrl, imageUrl, title)
+    fun updateBookmarkPreview(bookmarkUrl: String, imageUrl: String, title: String): Single<Bookmark> {
+        return bookmarksLocalDataSource.updateBookmarkPreview(bookmarkUrl, imageUrl, title)
     }
 }

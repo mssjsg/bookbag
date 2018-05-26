@@ -27,7 +27,6 @@ import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 import io.reactivex.*
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
-import io.reactivex.functions.Function
 import javax.inject.Inject
 
 
@@ -75,16 +74,13 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         get() = items.filter { it.isSelected }.size
 
     fun loadPreview(bookmarkListItem: BookmarkListItem) {
-        disposables.add(Observable.fromCallable({
-            var previewUrl = ""
-            var title = bookmarkListItem.name
-            try {
-                val item = urlPreviewManager.get(bookmarkListItem.url)
-                previewUrl = item.previewUrl
-                title = item.title
-            } catch (e: LinkPreviewException) { }
+        disposables.add(Single.fromCallable({
+            urlPreviewManager.get(bookmarkListItem.url)
+        }).flatMap { item ->
+            val previewUrl = item.previewUrl
+            val title = item.title
             bookmarksRepository.updateBookmarkPreview(bookmarkListItem.url, previewUrl, title)
-        }).compose(applySchedulersOnObservable()).subscribe({
+        }.compose(applySchedulersOnSingle()).subscribe({
             logger.d(TAG, "set image preview on: ${bookmarkListItem.url}")
         }, {
             logger.e(TAG, "failed to set image preview on ${bookmarkListItem.url}")
