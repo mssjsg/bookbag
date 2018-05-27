@@ -5,19 +5,14 @@ import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
 import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.ViewModelScope
-import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.interactor.itemlist.*
 import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderPathItem
 import github.io.mssjsg.bookbag.list.listitem.ListItem
-import github.io.mssjsg.bookbag.user.BookbagUserData
-import github.io.mssjsg.bookbag.util.ItemUidGenerator
 import github.io.mssjsg.bookbag.util.Logger
 import github.io.mssjsg.bookbag.util.RxTransformers
-import github.io.mssjsg.bookbag.util.linkpreview.JsoupWebPageCrawler
-import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 import io.reactivex.disposables.CompositeDisposable
@@ -36,11 +31,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                                                  val loadPreviewInteractor: LoadPreviewInteractor,
                                                  val loadListItemsInteractor: LoadListItemsInteractor,
                                                  val loadFoldersPathsInteractor: LoadFolderPathsInteractor,
-                                                 val deleteFolderInteractor: DeleteFolderInteractor,
-                                                 val getFolderInteractor: GetFolderInteractor,
-                                                 val addBookmarkInteractor: AddBookmarkInteractor,
-                                                 val addFolderInteractor: AddFolderInteractor,
-                                                 val moveItemsInteractor: MoveItemsInteractor) : AndroidViewModel(application) {
+                                                 val getFolderInteractor: GetFolderInteractor) : AndroidViewModel(application) {
 
     var isInMultiSelectionMode = false
         set(value) {
@@ -140,47 +131,6 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         }
     }
 
-    fun addBookmark(url: String) {
-        addBookmarkInteractor.getSingle(AddBookmarkInteractor.Param(url, currentFolderId))
-                .compose(rxTransformers.applySchedulersOnSingle())
-                .subscribe({
-                    logger.d(TAG, "bookmark saved: $url")
-                }, {
-                    logger.e(TAG, "failed to save bookmark")
-                })
-    }
-
-    fun addFolder(folderName: String) {
-        addFolderInteractor.getSingle(AddFolderInteractor.Param(folderName, currentFolderId))
-                .compose(rxTransformers.applySchedulersOnSingle())
-                .subscribe({
-                    logger.d(TAG, "folder saved: $folderName")
-                }, {
-                    logger.e(TAG, "failed to save folder")
-                })
-    }
-
-    fun deleteSelectedItems() {
-        val selectedUrls = ArrayList<String>()
-        val selectedFolderIds = ArrayList<String>()
-
-        items.forEach({ listItem ->
-            if (listItem.isSelected) {
-                when (listItem) {
-                    is BookmarkListItem -> selectedUrls.add(listItem.url)
-                    is FolderListItem -> selectedFolderIds.add(listItem.folderId)
-                }
-            }
-        })
-
-        deleteFolderInteractor.getSingle(DeleteFolderInteractor.Param(selectedUrls, selectedFolderIds))
-                .compose(rxTransformers.applySchedulersOnSingle()).subscribe({
-                    logger.d(TAG, "items deleted count: $it")
-                }, { throwable ->
-                    logger.e(TAG, "failed to delete items", throwable)
-                })
-    }
-
     fun getItemViewType(position: Int): Int {
         return getListItem(position)?.let {
             when (it) {
@@ -217,29 +167,6 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
             }
         }
         return selectedFolderIds
-    }
-
-    fun moveSelectedItems(targetFolderId: String?) {
-        val selectedBookmarkUrls = ArrayList<String>()
-        val selectedFolderIds = ArrayList<String>()
-
-        items.filter { it.isSelected }.forEach({ listItem ->
-            when (listItem) {
-                is BookmarkListItem -> {
-                    selectedBookmarkUrls.add(listItem.url)
-                }
-                is FolderListItem -> {
-                    selectedFolderIds.add(listItem.folderId)
-                }
-            }
-        })
-
-        moveItemsInteractor.getSingle(MoveItemsInteractor.Param(selectedBookmarkUrls,
-                selectedFolderIds, targetFolderId)).subscribe({
-            logger.d(TAG, "moved items count $it")
-        }, {
-            logger.e(TAG, "failed to move items")
-        })
     }
 
     companion object {

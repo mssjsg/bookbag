@@ -17,14 +17,8 @@ class FolderSelectionViewModel @Inject constructor(application: BookBagApplicati
                                                    loadPreviewInteractor: LoadPreviewInteractor,
                                                    loadListItemsInteractor: LoadListItemsInteractor,
                                                    loadFoldersPathsInteractor: LoadFolderPathsInteractor,
-                                                   deleteFolderInteractor: DeleteFolderInteractor,
-                                                   getFolderInteractor: GetFolderInteractor,
-                                                   addBookmarkInteractor: AddBookmarkInteractor,
-                                                   addFolderInteractor: AddFolderInteractor,
-                                                   moveItemsInteractor: MoveItemsInteractor) : ItemListViewModel(
+                                                   getFolderInteractor: GetFolderInteractor) : ItemListViewModel(
         application, logger, rxTransformers, liveBus, localLiveBus, loadPreviewInteractor,
-        loadListItemsInteractor, loadFoldersPathsInteractor, deleteFolderInteractor,
-        getFolderInteractor, addBookmarkInteractor, addFolderInteractor, moveItemsInteractor
-) {
+        loadListItemsInteractor, loadFoldersPathsInteractor, getFolderInteractor) {
     lateinit var folderSelectionComponent: FolderSelectionComponent
 }
