@@ -106,5 +106,6 @@ dependencies {
     //multidex
     implementation 'com.android.support:multidex:1.0.1'
 
+    //debug DB
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.3'
 }

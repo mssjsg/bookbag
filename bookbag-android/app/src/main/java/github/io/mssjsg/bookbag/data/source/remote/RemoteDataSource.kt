@@ -39,11 +39,13 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
         return Single.create({ emitter ->
             rootReference?.child(key)?.setValue(convertLocalToRemoteData(localData))
                     ?.addOnCompleteListener({ task ->
-                if (task.isSuccessful) {
-                    emitter.onSuccess(key)
-                } else {
-                    task.exception?.let { emitter.onError(it) }
-                }
+                        if (!emitter.isDisposed) {
+                            if (task.isSuccessful) {
+                                emitter.onSuccess(key)
+                            } else {
+                                task.exception?.let { emitter.onError(it) }
+                            }
+                        }
             })
         })
     }
@@ -62,10 +64,12 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
                         firebaseItem?.let {
                             val newFirebaseItem = createRemoteDataWithParentFolderId(firebaseItem, parentFolderId)
                             databaseReference.setValue(newFirebaseItem).addOnCompleteListener({ task ->
-                                if (task.isSuccessful) {
-                                    emitter.onSuccess(1)
-                                } else {
-                                    task.exception?.let { emitter.onError(it) }
+                                if (!emitter.isDisposed) {
+                                    if (task.isSuccessful) {
+                                        emitter.onSuccess(1)
+                                    } else {
+                                        task.exception?.let { emitter.onError(it) }
+                                    }
                                 }
                             })
                         }
@@ -76,15 +80,18 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
     }
 
     override final fun deleteItems(itemsIds: List<String>): Single<Int> {
-        return Observable.fromIterable(itemsIds).flatMap({ id ->
+        return Single.zip(itemsIds.map { id ->
             val key = id.encodeForFirebaseKey()
-            Observable.create<Boolean>({ emitter ->
+            Single.create<Boolean>({ emitter ->
                 rootReference?.child(key)?.removeValue()?.addOnCompleteListener({
-                    emitter.onNext(it.isSuccessful)
-                    emitter.onComplete()
+                    if (!emitter.isDisposed) {
+                        emitter.onSuccess(it.isSuccessful)
+                    }
                 })
             })
-        }).filter({ it }).toList().map { it -> it.size }
+        }, {
+            it.filter { it == true }.count()
+        })
     }
 
     override final fun getItem(id: String): Flowable<LocalData> {

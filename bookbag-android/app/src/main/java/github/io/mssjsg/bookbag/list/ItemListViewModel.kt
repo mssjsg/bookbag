@@ -10,6 +10,7 @@ import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.data.source.BookmarksRepository
 import github.io.mssjsg.bookbag.data.source.FoldersRepository
+import github.io.mssjsg.bookbag.interactor.itemlist.DeleteFolderInteractor
 import github.io.mssjsg.bookbag.interactor.itemlist.LoadFolderPathsInteractor
 import github.io.mssjsg.bookbag.interactor.itemlist.LoadPreviewInteractor
 import github.io.mssjsg.bookbag.interactor.itemlist.LoadListItemsInteractor
@@ -46,7 +47,8 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
                                                  val bookbagUserData: BookbagUserData,
                                                  val loadPreviewInteractor: LoadPreviewInteractor,
                                                  val loadListItemsInteractor: LoadListItemsInteractor,
-                                                 val loadFoldersPathsInteractor: LoadFolderPathsInteractor) : AndroidViewModel(application) {
+                                                 val loadFoldersPathsInteractor: LoadFolderPathsInteractor,
+                                                 val deleteFolderInteractor: DeleteFolderInteractor) : AndroidViewModel(application) {
 
     var isInMultiSelectionMode = false
         set(value) {
@@ -179,49 +181,22 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     fun deleteSelectedItems() {
         val selectedUrls = ArrayList<String>()
         val selectedFolderIds = ArrayList<String>()
-        for (listItem: ListItem in items) {
+
+        items.forEach({ listItem ->
             if (listItem.isSelected) {
                 when(listItem) {
                     is BookmarkListItem -> selectedUrls.add(listItem.url)
                     is FolderListItem -> selectedFolderIds.add(listItem.folderId)
                 }
             }
-        }
+        })
 
-        deleteItemsRecursively(selectedUrls, selectedFolderIds)
+        deleteFolderInteractor.getSingle(DeleteFolderInteractor.Param(selectedUrls, selectedFolderIds))
                 .compose(applySchedulersOnSingle()).subscribe({
                     logger.d(TAG, "items deleted count: $it")
                 }, { throwable ->
                     logger.e(TAG, "failed to delete items", throwable)
                 })
-    }
-
-    private fun deleteItemsRecursively(urls: List<String>, folderIds: List<String>): Single<Int> {
-        return bookmarksRepository.deleteItems(urls).flatMap {
-            if (folderIds.size > 0) {
-                foldersRepository.deleteItems(folderIds).flatMap {
-                    Single.zip(folderIds.map({ folderId ->
-                        Single.zip<List<Folder>, List<Bookmark>, Pair<List<Bookmark>, List<Folder>>>(
-                                foldersRepository.getItems(folderId).firstOrError(),
-                                bookmarksRepository.getItems(folderId).firstOrError(),
-                                object : BiFunction<List<Folder>, List<Bookmark>, Pair<List<Bookmark>, List<Folder>>> {
-                                    override fun apply(folderList: List<Folder>, bookmarkList: List<Bookmark>): Pair<List<Bookmark>, List<Folder>> {
-                                        return Pair(bookmarkList, folderList)
-                                    }
-                                }
-                        ).flatMap { pair ->
-                            deleteItemsRecursively(pair.first.map { it.url }, pair.second.map { it.folderId })
-                        }
-                    }), {
-                        it.sumBy { it as Int }
-                    })
-                }
-            } else {
-                Single.just(0)
-            }
-        }.map { folderContentSize ->
-            urls.size + folderIds.size + folderContentSize
-        }
     }
 
     fun getItemViewType(position: Int): Int {

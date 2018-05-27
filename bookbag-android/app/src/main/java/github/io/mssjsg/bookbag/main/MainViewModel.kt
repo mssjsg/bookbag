@@ -3,6 +3,7 @@ package github.io.mssjsg.bookbag.main
 import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.data.source.BookmarksRepository
 import github.io.mssjsg.bookbag.data.source.FoldersRepository
+import github.io.mssjsg.bookbag.interactor.itemlist.DeleteFolderInteractor
 import github.io.mssjsg.bookbag.interactor.itemlist.LoadFolderPathsInteractor
 import github.io.mssjsg.bookbag.interactor.itemlist.LoadListItemsInteractor
 import github.io.mssjsg.bookbag.interactor.itemlist.LoadPreviewInteractor
@@ -26,8 +27,10 @@ class MainViewModel @Inject constructor(application: BookBagApplication,
                                         bookbagUserData: BookbagUserData,
                                         loadPreviewInteractor: LoadPreviewInteractor,
                                         loadListItemsInteractor: LoadListItemsInteractor,
-                                        loadFolderPathsInteractor: LoadFolderPathsInteractor) : ItemListViewModel(
+                                        loadFolderPathsInteractor: LoadFolderPathsInteractor,
+                                        deleteFolderInteractor: DeleteFolderInteractor) : ItemListViewModel(
         application, schedulers, logger, bookmarksRepository, foldersRepository, liveBus, localLiveBus,
-        uidGenerator, bookbagUserData, loadPreviewInteractor, loadListItemsInteractor, loadFolderPathsInteractor) {
+        uidGenerator, bookbagUserData, loadPreviewInteractor, loadListItemsInteractor, loadFolderPathsInteractor,
+        deleteFolderInteractor) {
     lateinit var mainComponent: MainComponent
 }
