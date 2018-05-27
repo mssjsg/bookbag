@@ -1,4 +1,4 @@
-package github.io.mssjsg.bookbag.list
+package github.io.mssjsg.bookbag.list.event
 
 import github.io.mssjsg.bookbag.util.livebus.LiveEvent
 

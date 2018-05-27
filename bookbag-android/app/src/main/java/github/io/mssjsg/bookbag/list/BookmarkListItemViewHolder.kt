@@ -2,6 +2,8 @@ package github.io.mssjsg.bookbag.list
 
 import android.support.v7.widget.RecyclerView
 import github.io.mssjsg.bookbag.databinding.ItemBookmarkBinding
+import github.io.mssjsg.bookbag.list.event.ItemClickEvent
+import github.io.mssjsg.bookbag.list.event.ItemLongClickEvent
 import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 

@@ -1,8 +1,8 @@
-package github.io.mssjsg.bookbag.list
+package github.io.mssjsg.bookbag.list.event
 
 import github.io.mssjsg.bookbag.util.livebus.LiveEvent
 
 /**
  * Created by Sing on 30/3/2018.
  */
-data class ItemLongClickEvent(val position: Int): LiveEvent()
+data class ItemToggleEvent(val position: Int): LiveEvent()
