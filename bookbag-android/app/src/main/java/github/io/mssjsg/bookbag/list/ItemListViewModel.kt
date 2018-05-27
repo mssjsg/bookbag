@@ -4,31 +4,23 @@ import android.arch.lifecycle.AndroidViewModel
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
 import github.io.mssjsg.bookbag.BookBagApplication
-import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.ViewModelScope
 import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.Folder
-import github.io.mssjsg.bookbag.data.source.BookmarksRepository
-import github.io.mssjsg.bookbag.data.source.FoldersRepository
-import github.io.mssjsg.bookbag.interactor.itemlist.DeleteFolderInteractor
-import github.io.mssjsg.bookbag.interactor.itemlist.LoadFolderPathsInteractor
-import github.io.mssjsg.bookbag.interactor.itemlist.LoadPreviewInteractor
-import github.io.mssjsg.bookbag.interactor.itemlist.LoadListItemsInteractor
+import github.io.mssjsg.bookbag.interactor.itemlist.*
 import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderPathItem
 import github.io.mssjsg.bookbag.list.listitem.ListItem
 import github.io.mssjsg.bookbag.user.BookbagUserData
-import github.io.mssjsg.bookbag.util.BookbagSchedulers
 import github.io.mssjsg.bookbag.util.ItemUidGenerator
 import github.io.mssjsg.bookbag.util.Logger
+import github.io.mssjsg.bookbag.util.RxTransformers
 import github.io.mssjsg.bookbag.util.linkpreview.JsoupWebPageCrawler
 import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
-import io.reactivex.*
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.BiFunction
 import javax.inject.Inject
 
 
@@ -37,18 +29,18 @@ import javax.inject.Inject
  */
 @ViewModelScope
 open class ItemListViewModel @Inject constructor(val application: BookBagApplication,
-                                                 val schedulers: BookbagSchedulers,
                                                  val logger: Logger,
-                                                 val bookmarksRepository: BookmarksRepository,
-                                                 val foldersRepository: FoldersRepository,
+                                                 val rxTransformers: RxTransformers,
                                                  val liveBus: LiveBus,
                                                  val localLiveBus: LocalLiveBus,
-                                                 val uidGenerator: ItemUidGenerator,
-                                                 val bookbagUserData: BookbagUserData,
                                                  val loadPreviewInteractor: LoadPreviewInteractor,
                                                  val loadListItemsInteractor: LoadListItemsInteractor,
                                                  val loadFoldersPathsInteractor: LoadFolderPathsInteractor,
-                                                 val deleteFolderInteractor: DeleteFolderInteractor) : AndroidViewModel(application) {
+                                                 val deleteFolderInteractor: DeleteFolderInteractor,
+                                                 val getFolderInteractor: GetFolderInteractor,
+                                                 val addBookmarkInteractor: AddBookmarkInteractor,
+                                                 val addFolderInteractor: AddFolderInteractor,
+                                                 val moveItemsInteractor: MoveItemsInteractor) : AndroidViewModel(application) {
 
     var isInMultiSelectionMode = false
         set(value) {
@@ -71,7 +63,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     var isShowingBookmarks: Boolean = true
 
     private lateinit var disposables: CompositeDisposable
-    private lateinit var currentFolder: Folder
+    private var currentFolder: Folder? = null
     lateinit var filteredFolders: Array<String>
 
     var selectedItemCount: Int = 0
@@ -88,23 +80,21 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
 
         disposables = CompositeDisposable()
 
-        currentFolderId?.let {
-            disposables.add(foldersRepository.getItem(it).subscribe({
-                currentFolder = it
-            }))
-        }
+        disposables.add(getFolderInteractor.getFlowable(currentFolderId).subscribe({
+            currentFolder = it.folder
+        }))
 
         disposables.add(loadListItemsInteractor.getFlowable(LoadListItemsInteractor.Param(currentFolderId, filteredFolders))
-                .compose(applySchedulersOnFlowable()).subscribe { listItems ->
-            items.clear()
-            items.addAll(listItems)
-        })
+                .compose(rxTransformers.applySchedulersOnFlowable()).subscribe { listItems ->
+                    items.clear()
+                    items.addAll(listItems)
+                })
 
-        disposables.add(loadFoldersPathsInteractor.getSingle(currentFolderId).compose(applySchedulersOnSingle()).subscribe {
-            folderPathItems ->
-            paths.clear()
-            paths.addAll(folderPathItems)
-        })
+        disposables.add(loadFoldersPathsInteractor.getSingle(currentFolderId)
+                .compose(rxTransformers.applySchedulersOnSingle()).subscribe { folderPathItems ->
+                    paths.clear()
+                    paths.addAll(folderPathItems)
+                })
     }
 
     fun getListItem(position: Int): ListItem? {
@@ -117,7 +107,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         items.get(position)?.let { item ->
             if (item is BookmarkListItem) {
                 disposables.add(loadPreviewInteractor.getSingle(item.url)
-                        .compose(applySchedulersOnSingle())
+                        .compose(rxTransformers.applySchedulersOnSingle())
                         .subscribe({ bookmark ->
                             logger.d(TAG, "set image preview on: ${item.url}")
                             for (i in items.indices) {
@@ -151,26 +141,18 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     }
 
     fun addBookmark(url: String) {
-        val urls = SearchUrls.matches(url)
-        if (urls.size > 0) {
-            val detectedUrl = JsoupWebPageCrawler.extendedTrim(urls.get(0))
-            if (detectedUrl.isNotEmpty()) {
-                bookmarksRepository.saveItem(Bookmark(url = detectedUrl,
-                        folderId = currentFolderId))
-                        .compose(applySchedulersOnSingle())
-                        .subscribe({
-                            logger.d(TAG, "bookmark saved: $url")
-                        }, {
-                            logger.e(TAG, "failed to save bookmark")
-                        })
-            }
-        }
+        addBookmarkInteractor.getSingle(AddBookmarkInteractor.Param(url, currentFolderId))
+                .compose(rxTransformers.applySchedulersOnSingle())
+                .subscribe({
+                    logger.d(TAG, "bookmark saved: $url")
+                }, {
+                    logger.e(TAG, "failed to save bookmark")
+                })
     }
 
     fun addFolder(folderName: String) {
-        val folderId = uidGenerator.generateItemUid(folderName)
-        foldersRepository.saveItem(Folder(folderId = folderId,
-                name = folderName, parentFolderId = currentFolderId)).compose(applySchedulersOnSingle())
+        addFolderInteractor.getSingle(AddFolderInteractor.Param(folderName, currentFolderId))
+                .compose(rxTransformers.applySchedulersOnSingle())
                 .subscribe({
                     logger.d(TAG, "folder saved: $folderName")
                 }, {
@@ -184,7 +166,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
 
         items.forEach({ listItem ->
             if (listItem.isSelected) {
-                when(listItem) {
+                when (listItem) {
                     is BookmarkListItem -> selectedUrls.add(listItem.url)
                     is FolderListItem -> selectedFolderIds.add(listItem.folderId)
                 }
@@ -192,7 +174,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
         })
 
         deleteFolderInteractor.getSingle(DeleteFolderInteractor.Param(selectedUrls, selectedFolderIds))
-                .compose(applySchedulersOnSingle()).subscribe({
+                .compose(rxTransformers.applySchedulersOnSingle()).subscribe({
                     logger.d(TAG, "items deleted count: $it")
                 }, { throwable ->
                     logger.e(TAG, "failed to delete items", throwable)
@@ -201,7 +183,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
 
     fun getItemViewType(position: Int): Int {
         return getListItem(position)?.let {
-            when(it) {
+            when (it) {
                 is BookmarkListItem -> ITEM_VIEW_TYPE_BOOKMARK
                 is FolderListItem -> ITEM_VIEW_TYPE_FOLDER
                 else -> ITEM_VIEW_TYPE_UNKNOWN
@@ -215,9 +197,7 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     }
 
     fun loadParentFolder() {
-        if (::currentFolder.isInitialized) {
-            loadFolder(currentFolder.parentFolderId)
-        }
+        currentFolder?.let { loadFolder(it.parentFolderId) }
     }
 
     fun loadFolder(folderId: String?) {
@@ -226,10 +206,10 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     }
 
     fun getSelectedFolderIds(): List<String> {
-        val selectedFolderIds =  ArrayList<String>()
+        val selectedFolderIds = ArrayList<String>()
         for (listItem in items) {
             if (listItem.isSelected) {
-                when(listItem) {
+                when (listItem) {
                     is FolderListItem -> {
                         selectedFolderIds.add(listItem.folderId)
                     }
@@ -240,56 +220,26 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     }
 
     fun moveSelectedItems(targetFolderId: String?) {
-        val selectedBookmarkUrls =  ArrayList<String>()
-        val selectedFolderIds =  ArrayList<String>()
-        for (listItem in items) {
-            if (listItem.isSelected) {
-                when(listItem) {
-                    is BookmarkListItem -> {
-                        selectedBookmarkUrls.add(listItem.url)
-                    }
-                    is FolderListItem -> {
-                        selectedFolderIds.add(listItem.folderId)
-                    }
+        val selectedBookmarkUrls = ArrayList<String>()
+        val selectedFolderIds = ArrayList<String>()
+
+        items.filter { it.isSelected }.forEach({ listItem ->
+            when (listItem) {
+                is BookmarkListItem -> {
+                    selectedBookmarkUrls.add(listItem.url)
+                }
+                is FolderListItem -> {
+                    selectedFolderIds.add(listItem.folderId)
                 }
             }
-        }
-
-        selectedBookmarkUrls.forEach({ url ->
-            bookmarksRepository.moveItem(url, targetFolderId).compose(applySchedulersOnSingle())
-                .subscribe({
-                    logger.d(TAG, "moved bookmark $url")
-                }, {
-                    logger.e(TAG, "failed to move bookmark $url")
-                })
         })
 
-        selectedFolderIds.forEach({ url ->
-            foldersRepository.moveItem(url, targetFolderId).compose(applySchedulersOnSingle())
-                    .subscribe({
-                        logger.d(TAG, "moved folder $url")
-                    }, {
-                        logger.e(TAG, "failed to move folder $url")
-                    })
+        moveItemsInteractor.getSingle(MoveItemsInteractor.Param(selectedBookmarkUrls,
+                selectedFolderIds, targetFolderId)).subscribe({
+            logger.d(TAG, "moved items count $it")
+        }, {
+            logger.e(TAG, "failed to move items")
         })
-    }
-
-    fun <T> applySchedulersOnObservable(): ObservableTransformer<T, T> {
-        return ObservableTransformer {
-            it.subscribeOn(schedulers.io()).observeOn(schedulers.mainThread())
-        }
-    }
-
-    fun <T> applySchedulersOnFlowable(): FlowableTransformer<T, T> {
-        return FlowableTransformer {
-            it.subscribeOn(schedulers.io()).observeOn(schedulers.mainThread())
-        }
-    }
-
-    fun <T> applySchedulersOnSingle(): SingleTransformer<T, T> {
-        return SingleTransformer {
-            it.subscribeOn(schedulers.io()).observeOn(schedulers.mainThread())
-        }
     }
 
     companion object {

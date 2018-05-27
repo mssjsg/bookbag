@@ -8,13 +8,13 @@ import github.io.mssjsg.bookbag.data.source.remote.BookmarksRemoteDataSource
 import github.io.mssjsg.bookbag.data.source.remote.FoldersRemoteDataSource
 import github.io.mssjsg.bookbag.data.source.remote.RemoteDataSource
 import github.io.mssjsg.bookbag.user.BookbagUserData
-import github.io.mssjsg.bookbag.util.BookbagSchedulers
+import github.io.mssjsg.bookbag.util.RxSchedulers
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class SyncDataManager @Inject constructor(val userData: BookbagUserData,
-                                          val schedulers: BookbagSchedulers,
+                                          val schedulers: RxSchedulers,
                                           foldersLocalDataSource: FoldersLocalDataSource,
                                           bookmarksLocalDataSource: BookmarksLocalDataSource,
                                           foldersRemoteDataSource: FoldersRemoteDataSource,
@@ -37,7 +37,7 @@ class SyncDataManager @Inject constructor(val userData: BookbagUserData,
         folderSourceSet.listenRemoteChanges()
     }
 
-    private class DataSourceSet<RemoteData, LocalData>(val schedulers: BookbagSchedulers, val localDataSource: BookbagDataSource<LocalData>, val remoteDataSource: RemoteDataSource<RemoteData, LocalData>) {
+    private class DataSourceSet<RemoteData, LocalData>(val schedulers: RxSchedulers, val localDataSource: BookbagDataSource<LocalData>, val remoteDataSource: RemoteDataSource<RemoteData, LocalData>) {
         fun synchronizeToRemote() {
             localDataSource.getDirtyItems()
                     .subscribeOn(schedulers.io())

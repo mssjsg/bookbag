@@ -188,10 +188,9 @@ public class JsoupWebPageCrawler implements WebPageCrawler {
 
 				matches.set(i, currentImage);
 			}
-
 		}
 
-		if (imageQuantity != ALL) {
+		if (imageQuantity != ALL && matches.size() >= imageQuantity) {
 			matches = matches.subList(0, imageQuantity);
 		}
 

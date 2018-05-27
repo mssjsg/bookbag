@@ -30,7 +30,10 @@ public class UrlPreviewManager {
         if (mCache.get(url) == null) {
             SourceContent sourceContent = mWebPageCrawler.makePreview(url);
 
-            String previewUrl = sourceContent.getImages().get(0);
+            String previewUrl = "";
+            if (sourceContent.getImages().size() > 0) {
+                previewUrl = sourceContent.getImages().get(0);
+            }
             String title = sourceContent.getTitle();
 
             UrlPreviewManager.Item item = new UrlPreviewManager.Item(title, previewUrl);

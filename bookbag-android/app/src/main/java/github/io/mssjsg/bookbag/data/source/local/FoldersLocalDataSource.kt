@@ -2,7 +2,6 @@ package github.io.mssjsg.bookbag.data.source.local
 
 import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.data.source.BookbagDataSource
-import github.io.mssjsg.bookbag.util.BookbagSchedulers
 import io.reactivex.Flowable
 import io.reactivex.Single
 import javax.inject.Inject

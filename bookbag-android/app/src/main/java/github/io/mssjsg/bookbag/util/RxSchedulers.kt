@@ -5,7 +5,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
-class BookbagSchedulers @Inject constructor() {
+class RxSchedulers @Inject constructor() {
     fun io(): Scheduler {
         return Schedulers.io()
     }
