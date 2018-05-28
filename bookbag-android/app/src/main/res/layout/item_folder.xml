@@ -5,7 +5,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="item"
             type="github.io.mssjsg.bookbag.list.listitem.FolderListItem"/>
@@ -18,7 +17,7 @@
 
         <TextView
             android:id="@+id/name"
-            style="@style/TextAppearance.AppCompat.Headline"
+            style="@style/FolderTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:ellipsize="end"
@@ -34,13 +33,13 @@
 
         <ImageView
             android:id="@+id/thumbnail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="?attr/listPreferredItemPaddingLeft"
-            android:src="@drawable/ic_folder"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_width="@dimen/large_150"
+            android:layout_height="@dimen/large_150"
+            app:srcCompat="@drawable/ic_folder"
+            android:scaleType="center"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
     </android.support.constraint.ConstraintLayout>
 

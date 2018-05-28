@@ -8,4 +8,13 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="FolderTitle">
+        <item name="android:textSize">@dimen/normal_100</item>
+        <item name="android:textColor">@color/colorTextFolderName</item>
+    </style>
+
+    <style name="BookmarkTitle" parent="TextAppearance.AppCompat.Headline">
+        <item name="android:textSize">@dimen/normal_100</item>
+    </style>
+
 </resources>

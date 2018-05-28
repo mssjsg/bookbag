@@ -19,6 +19,8 @@
             android:id="@+id/paths_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingHorizontal="@dimen/small_50"
+            android:clipToPadding="false"
             app:layout_constraintTop_toTopOf="parent"
             app:paths="@{viewmodel.paths}"
             android:orientation="horizontal"

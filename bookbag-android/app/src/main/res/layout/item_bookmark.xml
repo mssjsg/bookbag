@@ -16,7 +16,7 @@
         android:background="@{item.isSelected ? @drawable/background_selected : @drawable/background_normal }">
 
         <TextView
-            style="@style/TextAppearance.AppCompat.Headline"
+            style="@style/BookmarkTitle"
             android:id="@+id/name"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -25,19 +25,18 @@
             android:paddingHorizontal="?attr/listPreferredItemPaddingLeft"
             android:paddingVertical="?attr/listPreferredItemPaddingLeft"
             android:text="@{item.title}"
-            android:singleLine="true"
             android:ellipsize="end"
-            android:lines="1"
-            tools:text="testing"/>
+            android:maxLines="5"
+            tools:text="testing testing testing testing testing testing testing testing"/>
 
         <ImageView
             android:id="@+id/thumbnail"
-            android:layout_width="0dp"
+            android:layout_width="@dimen/large_150"
             android:layout_height="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintDimensionRatio="H,1:1"
+            app:layout_constraintHeight_min="@dimen/large_150"
             app:imageUrl="@{item.imageUrl}"/>
 
     </android.support.constraint.ConstraintLayout>

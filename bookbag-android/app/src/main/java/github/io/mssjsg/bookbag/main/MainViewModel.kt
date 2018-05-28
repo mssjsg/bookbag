@@ -27,7 +27,7 @@ class MainViewModel @Inject constructor(application: BookBagApplication,
         application, logger, rxTransformers, liveBus, localLiveBus, loadPreviewInteractor,
         loadListItemsInteractor, loadFoldersPathsInteractor, getFolderInteractor) {
     lateinit var mainComponent: MainComponent
-    
+
     fun addBookmark(url: String) {
         addBookmarkInteractor.getSingle(AddBookmarkInteractor.Param(url, currentFolderId))
                 .compose(rxTransformers.applySchedulersOnSingle())
