@@ -16,7 +16,7 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingVertical="@dimen/small_100"
-        android:background="?selectableItemBackground">
+        android:background="?android:attr/selectableItemBackground">
 
         <TextView
             style="@style/FolderTitle"
