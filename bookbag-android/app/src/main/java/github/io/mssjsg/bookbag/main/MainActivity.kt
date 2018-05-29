@@ -194,7 +194,7 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
                     title = getString(R.string.confirm_exit))
                     .show(supportFragmentManager, TAG_EXIT)
         } else {
-            viewModel.loadParentFolder()
+            super.onBackPressed()
         }
     }
 

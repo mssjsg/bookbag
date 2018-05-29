@@ -57,6 +57,9 @@ open class ItemListViewModel @Inject constructor(val application: BookBagApplica
     private var currentFolder: Folder? = null
     lateinit var filteredFolders: Array<String>
 
+    val parentFolderId: String?
+        get() = currentFolder?.parentFolderId
+
     var selectedItemCount: Int = 0
         private set
         get() = items.filter { it.isSelected }.size

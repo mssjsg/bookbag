@@ -2,6 +2,7 @@ package github.io.mssjsg.bookbag.list
 
 import android.support.v7.widget.RecyclerView
 import github.io.mssjsg.bookbag.databinding.ItemFolderPathBinding
+import github.io.mssjsg.bookbag.list.event.PathClickEvent
 import github.io.mssjsg.bookbag.list.listitem.FolderPathItem
 import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 
@@ -12,4 +13,8 @@ class PathViewHolder(private val localLiveBus: LocalLiveBus, private val itemFol
             itemFolderPathBinding.item = value
             itemFolderPathBinding.executePendingBindings()
         }
+
+    init {
+        itemFolderPathBinding.root.setOnClickListener { localLiveBus.post(PathClickEvent(folderPathItem?.folderId)) }
+    }
 }

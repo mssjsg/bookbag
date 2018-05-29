@@ -19,13 +19,6 @@ import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 
 class ItemListFragment : Fragment() {
 
-    companion object {
-        fun newInstance(): ItemListFragment {
-            val itemListFragment = ItemListFragment()
-            return itemListFragment
-        }
-    }
-
     protected lateinit var viewModel: ItemListViewModel
     private lateinit var listBinding: FragmentListBinding
     private lateinit var mainListAdapter: MainListAdapter
@@ -49,7 +42,7 @@ class ItemListFragment : Fragment() {
 
         //init view model
         viewModel = itemListViewModelProvider.getItemListViewModel()
-        viewModel.loadCurrentFolder()
+        viewModel.loadFolder(getFolderId(this))
         viewModel.localLiveBus.let {
             //init event
             it.subscribe(this, Observer {
@@ -76,14 +69,23 @@ class ItemListFragment : Fragment() {
         if (viewModel.isInMultiSelectionMode) {
             viewModel.toggleSelected(position)
             viewModel.localLiveBus.post(ItemToggleEvent(position))
-        } else {
-            viewModel.getListItem(position).let {
-                when (it) {
-                    is FolderListItem -> {
-                        viewModel.loadFolder(it.folderId)
-                    }
-                }
+        }
+    }
+
+    companion object {
+        const val ARG_FOLDER_ID = "ARG_FOLDER_ID"
+
+        fun newInstance(folderId: String?): ItemListFragment {
+            val itemListFragment = ItemListFragment()
+            val arguments = Bundle().apply {
+                putString(ARG_FOLDER_ID, folderId)
             }
+            itemListFragment.arguments = arguments
+            return itemListFragment
+        }
+
+        fun getFolderId(itemListFragment: ItemListFragment): String? {
+            return itemListFragment.arguments?.getString(ARG_FOLDER_ID)
         }
     }
 }
