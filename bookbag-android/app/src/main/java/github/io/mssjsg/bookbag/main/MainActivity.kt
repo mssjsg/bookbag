@@ -19,8 +19,6 @@ import github.io.mssjsg.bookbag.folderselection.FolderSelectionActivity
 import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.util.extension.getFolderId
 import github.io.mssjsg.bookbag.util.extension.getSharedUrl
-import github.io.mssjsg.bookbag.util.extension.putFilteredFolderIds
-import github.io.mssjsg.bookbag.util.extension.putFolderId
 import github.io.mssjsg.bookbag.widget.SimpleConfirmDialogFragment
 import github.io.mssjsg.bookbag.widget.SimpleInputDialogFragment
 import java.util.*
@@ -132,10 +130,9 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
                 true
             }
             R.id.item_move -> {
-                val intent = Intent(this, FolderSelectionActivity::class.java)
-                intent.putFolderId(viewModel.currentFolderId)
-                intent.putFilteredFolderIds(viewModel.getSelectedFolderIds().toTypedArray())
-                startActivityForResult(intent, REQUEST_ID_MOVE_ITEMS)
+                FolderSelectionActivity.startForResult(REQUEST_ID_MOVE_ITEMS, this, viewModel.currentFolderId,
+                        viewModel.getSelectedFolderIds().toTypedArray(), getString(R.string.title_move_to),
+                        getString(R.string.btn_confirm_move))
             }
             else -> false
         }

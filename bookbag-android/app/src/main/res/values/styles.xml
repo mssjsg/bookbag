@@ -17,4 +17,10 @@
         <item name="android:textSize">@dimen/normal_100</item>
     </style>
 
+    <style name="SelectFolderBtn">
+        <item name="android:textSize">@dimen/normal_100</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/colorGreen4</item>
+    </style>
+
 </resources>

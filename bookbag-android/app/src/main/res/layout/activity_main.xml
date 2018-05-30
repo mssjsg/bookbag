@@ -10,12 +10,8 @@
             type="github.io.mssjsg.bookbag.main.MainViewModel"/>
     </data>
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/list_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:context="github.io.mssjsg.bookbag.main.MainActivity">
-
-    </LinearLayout>
+        android:layout_height="match_parent"/>
 </layout>
