@@ -33,7 +33,7 @@ abstract class ItemListActivity<VM : ItemListViewModel> : BookbagActivity(), Ite
 
     private fun onItemSelected(position: Int) {
         viewModel.items.get(position).let { item ->
-            if (item is FolderListItem) {
+            if (item is FolderListItem && !viewModel.isInMultiSelectionMode) {
                 showItemListFragment(item.folderId, TransitionType.FORWARD)
             }
         }
