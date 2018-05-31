@@ -130,8 +130,13 @@ class MainActivity : ItemListActivity<MainViewModel>(), ActionMode.Callback {
                 true
             }
             R.id.item_move -> {
+                val selectedCount = viewModel.selectedItemCount
                 FolderSelectionActivity.startForResult(REQUEST_ID_MOVE_ITEMS, this, viewModel.currentFolderId,
-                        viewModel.getSelectedFolderIds().toTypedArray(), getString(R.string.title_move_to),
+                        viewModel.getSelectedFolderIds().toTypedArray(),
+                        when(selectedCount) {
+                            1 -> R.string.title_move_to_one
+                            else -> R.string.title_move_to_other
+                        }.let { getString(it, selectedCount) },
                         getString(R.string.btn_confirm_move))
             }
             else -> false
