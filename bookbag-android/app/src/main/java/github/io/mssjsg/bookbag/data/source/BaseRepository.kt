@@ -24,10 +24,14 @@ open class BaseRepository<RemoteData, LocalData> @Inject constructor(val localDa
     }
 
     override fun deleteItems(ids: List<String>): Single<Int> {
-        return Single.zip(listOf(localDataSource.deleteItems(ids),
-        remoteDataSource.deleteItems(ids)), {
-          it.get(0) as Int
-        })
+        return if (ids.size > 0) {
+            Single.zip(listOf(localDataSource.deleteItems(ids),
+                    remoteDataSource.deleteItems(ids)), {
+                it.get(0) as Int
+            })
+        } else {
+            Single.just(0)
+        }
     }
 
     override fun saveItem(bookmark: LocalData): Single<String> {
