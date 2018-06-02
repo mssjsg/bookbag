@@ -15,6 +15,7 @@
         android:theme="@style/AppTheme">
         <activity android:name=".main.MainActivity"
             android:launchMode="singleTop">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -29,8 +30,6 @@
                 <data android:mimeType="video/*" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".folderselection.FolderSelectionActivity"/>
     </application>
 
 </manifest>

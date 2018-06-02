@@ -1,0 +1,115 @@
+package github.io.mssjsg.bookbag.folderselection
+
+import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.ViewModelProvider
+import android.arch.lifecycle.ViewModelProviders
+import android.databinding.DataBindingUtil
+import android.os.Bundle
+import android.view.*
+import github.io.mssjsg.bookbag.BookBagAppComponent
+import github.io.mssjsg.bookbag.R
+import github.io.mssjsg.bookbag.databinding.FragmentSelectFolderBinding
+import github.io.mssjsg.bookbag.folderselection.event.FolderSelectionEvent
+import github.io.mssjsg.bookbag.list.ItemListContainerFragment
+import github.io.mssjsg.bookbag.util.extension.putFilteredFolderIds
+import github.io.mssjsg.bookbag.util.extension.putFolderId
+
+class FolderSelectionFragment: ItemListContainerFragment<FolderSelectionViewModel>() {
+
+    private lateinit var mainBinding: FragmentSelectFolderBinding
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        mainBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_select_folder, container, false)
+        return mainBinding.root
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        mainBinding.layoutToolbar.toolbar.let {
+            it.title = getTitle(this)
+            it.inflateMenu(R.menu.menu_folder_selection)
+        }
+
+        mainBinding.btnConfirm.text = getConfirmButtonText(this)
+
+        mainBinding.btnConfirm.setOnClickListener({
+            viewModel.liveBus.post(FolderSelectionEvent(getRequestId(this), true, viewModel.currentFolderId))
+            fragmentManager?.popBackStackImmediate()
+        })
+
+        mainBinding.btnCanecl.setOnClickListener({
+            viewModel.liveBus.post(FolderSelectionEvent(getRequestId(this), false))
+            fragmentManager?.popBackStackImmediate()
+        })
+    }
+
+    override fun onBackPressed(): Boolean {
+        return super.onBackPressed().apply {
+            if (!this) {
+                viewModel.liveBus.post(FolderSelectionEvent(
+                        getRequestId(this@FolderSelectionFragment),
+                        false, viewModel.currentFolderId)
+                )
+            }
+        }
+    }
+
+    override fun isSignInRequired(): Boolean {
+        return true
+    }
+
+    override fun onViewModelCreated(viewModel: FolderSelectionViewModel) {
+        super.onViewModelCreated(viewModel)
+        viewModel.isShowingBookmarks = false
+    }
+
+    override fun onCreateViewModel(): FolderSelectionViewModel {
+        return ViewModelProviders.of(this, ViewModelFactory(getAppComponent()))
+                .get(FolderSelectionViewModel::class.java)
+    }
+
+    private class ViewModelFactory(val viewModelComponent: BookBagAppComponent): ViewModelProvider.NewInstanceFactory() {
+
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            return viewModelComponent.folderSelectionComponent().let { component ->
+                component.provideFolderSelectionViewModel().apply { this.folderSelectionComponent = component } as T
+            }
+        }
+    }
+
+    companion object {
+        const val TAG_ITEM_LIST = "github.io.mssjsg.bookbag.folderselection.TAG_ITEM_LIST"
+
+        const val ARG_TITLE = "github.io.mssjsg.bookbag.folderselection.ARG_TITLE"
+        const val ARG_CONFIRM_BUTTON = "github.io.mssjsg.bookbag.folderselection.ARG_CONFIRM_BUTTON"
+        const val ARG_REQUEST_ID = "github.io.mssjsg.bookbag.folderselection.ARG_REQUEST_ID"
+
+        fun newInstance(requestId:Int, folderId: String?, filteredFolderIds: Array<String>,
+                        title: String, confirmButton: String): FolderSelectionFragment {
+            val bundle = Bundle()
+            bundle?.apply {
+                putString(ARG_TITLE, title)
+                putString(ARG_CONFIRM_BUTTON, confirmButton)
+                putInt(ARG_REQUEST_ID, requestId)
+                putFolderId(folderId)
+                putFilteredFolderIds(filteredFolderIds)
+            }
+
+            val folderSelectionFragment = FolderSelectionFragment()
+            folderSelectionFragment.arguments = bundle
+            return folderSelectionFragment
+        }
+
+        private fun getTitle(fragment: FolderSelectionFragment): String {
+            return fragment.arguments?.getString(ARG_TITLE)!!
+        }
+
+        private fun getConfirmButtonText(fragment: FolderSelectionFragment): String {
+            return fragment.arguments?.getString(ARG_CONFIRM_BUTTON)!!
+        }
+
+        private fun getRequestId(fragment: FolderSelectionFragment): Int {
+            return fragment.arguments?.getInt(ARG_REQUEST_ID)!!
+        }
+    }
+}

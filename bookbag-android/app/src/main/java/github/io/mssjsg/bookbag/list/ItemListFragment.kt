@@ -32,8 +32,8 @@ class ItemListFragment : Fragment() {
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
-        if (context is ItemListViewModelProvider) {
-            itemListViewModelProvider = context
+        if (parentFragment is ItemListViewModelProvider) {
+            itemListViewModelProvider = parentFragment as ItemListViewModelProvider
         }
     }
 

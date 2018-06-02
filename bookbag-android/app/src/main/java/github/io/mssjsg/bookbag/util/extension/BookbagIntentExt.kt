@@ -38,19 +38,3 @@ fun Intent.getSharedUrl() : String {
 
     return ""
 }
-
-fun Intent.putFolderId(folderId: String?) {
-    putExtra(INTENT_EXTRA_FOLDER_ID, folderId)
-}
-
-fun Intent.getFolderId(): String? {
-    return getStringExtra(INTENT_EXTRA_FOLDER_ID)
-}
-
-fun Intent.putFilteredFolderIds(filteredFolderIds: Array<String>) {
-    putExtra(INTENT_EXTRA_FILTERED_FOLDER_IDS, filteredFolderIds)
-}
-
-fun Intent.getFilteredFolderIds(): Array<String> {
-    return getStringArrayExtra(INTENT_EXTRA_FILTERED_FOLDER_IDS) ?: emptyArray()
-}

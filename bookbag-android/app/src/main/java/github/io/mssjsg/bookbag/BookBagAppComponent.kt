@@ -4,6 +4,7 @@ import dagger.Component
 import github.io.mssjsg.bookbag.data.DataModule
 import github.io.mssjsg.bookbag.data.SyncDataManager
 import github.io.mssjsg.bookbag.folderselection.FolderSelectionComponent
+import github.io.mssjsg.bookbag.folderview.FolderViewComponent
 import github.io.mssjsg.bookbag.main.MainComponent
 import github.io.mssjsg.bookbag.util.UtilModule
 import github.io.mssjsg.bookbag.util.executor.ExecutorModule
@@ -21,6 +22,8 @@ interface BookBagAppComponent {
     fun inject(bookBagApplication: BookBagApplication)
 
     fun folderSelectionComponent(): FolderSelectionComponent
+
+    fun folderViewComponent(): FolderViewComponent
 
     fun mainComponent(): MainComponent
 

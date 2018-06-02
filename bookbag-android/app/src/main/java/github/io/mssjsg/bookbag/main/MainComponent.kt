@@ -6,5 +6,7 @@ import github.io.mssjsg.bookbag.ViewModelScope
 @Subcomponent()
 @ViewModelScope
 interface MainComponent {
+    fun inject(mainActivity: MainActivity)
+
     fun provideMainViewModel(): MainViewModel
 }

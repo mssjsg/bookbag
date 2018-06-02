@@ -2,24 +2,35 @@ package github.io.mssjsg.bookbag.list
 
 import android.arch.lifecycle.Observer
 import android.os.Bundle
-import github.io.mssjsg.bookbag.BookbagActivity
+import github.io.mssjsg.bookbag.BookbagFragment
 import github.io.mssjsg.bookbag.R
-import github.io.mssjsg.bookbag.folderselection.FolderSelectionActivity
+import github.io.mssjsg.bookbag.folderselection.FolderSelectionFragment
 import github.io.mssjsg.bookbag.list.event.ItemClickEvent
 import github.io.mssjsg.bookbag.list.event.PathClickEvent
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 import github.io.mssjsg.bookbag.util.extension.getFilteredFolderIds
 import github.io.mssjsg.bookbag.util.extension.getFolderId
 
-abstract class ItemListActivity<VM : ItemListViewModel> : BookbagActivity(), ItemListViewModelProvider {
+abstract class ItemListContainerFragment<VM : ItemListViewModel> : BookbagFragment(), ItemListViewModelProvider {
     protected lateinit var viewModel: VM
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = onCreateViewModel()
-        viewModel.filteredFolders = intent.getFilteredFolderIds()
+        arguments?.let { bundle ->
+            viewModel.filteredFolders = bundle?.getFilteredFolderIds()
+        }
         onViewModelCreated(viewModel)
-        showItemListFragment(intent.getFolderId(), TransitionType.FRESH)
+    }
+
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        viewModel = onCreateViewModel()
+
+        arguments?.let { bundle ->
+            showItemListFragment(bundle.getFolderId(), TransitionType.FRESH)
+        }
 
         viewModel.localLiveBus.let {
             it.subscribe(this, Observer {
@@ -53,22 +64,23 @@ abstract class ItemListActivity<VM : ItemListViewModel> : BookbagActivity(), Ite
 
     open protected fun onViewModelCreated(viewModel: VM) {}
 
-    override fun onBackPressed() {
+    override fun onBackPressed(): Boolean {
         if (viewModel.currentFolderId == null) {
-            super.onBackPressed()
-        } else {
-            showItemListFragment(viewModel.parentFolderId, TransitionType.BACKWARD)
+            return false
         }
+
+        showItemListFragment(viewModel.parentFolderId, TransitionType.BACKWARD)
+        return true
     }
 
     protected fun getItemListFragment(): ItemListFragment {
-        return supportFragmentManager.findFragmentByTag(FolderSelectionActivity.TAG_ITEM_LIST) as ItemListFragment
+        return childFragmentManager.findFragmentByTag(FolderSelectionFragment.TAG_ITEM_LIST) as ItemListFragment
     }
 
     private fun showItemListFragment(folderId: String?, transitionType: TransitionType) {
         if (viewModel.currentFolderId != folderId
-                || !(supportFragmentManager.findFragmentByTag(FolderSelectionActivity.TAG_ITEM_LIST) is ItemListFragment)) {
-            supportFragmentManager.beginTransaction().apply {
+                || !(childFragmentManager.findFragmentByTag(FolderSelectionFragment.TAG_ITEM_LIST) is ItemListFragment)) {
+            childFragmentManager.beginTransaction().apply {
                 when (transitionType) {
                     TransitionType.FORWARD -> {
                         setCustomAnimations(R.anim.forward_enter_animation, R.anim.forward_exit_animation)
@@ -80,7 +92,7 @@ abstract class ItemListActivity<VM : ItemListViewModel> : BookbagActivity(), Ite
                     }
                 }
             }.replace(R.id.list_container, ItemListFragment.newInstance(folderId),
-                    FolderSelectionActivity.TAG_ITEM_LIST)
+                    FolderSelectionFragment.TAG_ITEM_LIST)
                     .commit()
         }
     }

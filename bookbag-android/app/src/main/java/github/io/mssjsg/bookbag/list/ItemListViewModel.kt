@@ -3,6 +3,7 @@ package github.io.mssjsg.bookbag.list
 import android.arch.lifecycle.AndroidViewModel
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
+import androidx.core.util.arraySetOf
 import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.ViewModelScope
 import github.io.mssjsg.bookbag.data.Folder
