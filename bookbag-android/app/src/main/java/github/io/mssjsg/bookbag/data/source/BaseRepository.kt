@@ -5,8 +5,11 @@ import io.reactivex.Flowable
 import io.reactivex.Single
 import javax.inject.Inject
 
-open class BaseRepository<RemoteData, LocalData> @Inject constructor(val localDataSource: BookbagDataSource<LocalData>,
-                                         val remoteDataSource: RemoteDataSource<RemoteData, LocalData>): BookbagDataSource<LocalData> {
+open class BaseRepository<RemoteData, LocalData> @Inject constructor(
+        private val localDataSource: BookbagDataSource<LocalData>,
+        private val remoteDataSource: RemoteDataSource<RemoteData, LocalData>
+): BookbagDataSource<LocalData> {
+
     override fun getItem(id: String): Flowable<LocalData> {
         return localDataSource.getItem(id)
     }
@@ -15,8 +18,11 @@ open class BaseRepository<RemoteData, LocalData> @Inject constructor(val localDa
         return localDataSource.getDirtyItems()
     }
 
-    override fun moveItem(url: String, folderId: String?): Single<Int> {
-        return localDataSource.moveItem(url, folderId)
+    override fun moveItem(id: String, folderId: String?): Single<Int> {
+        return Single.zip(listOf(localDataSource.moveItem(id, folderId),
+                remoteDataSource.moveItem(id, folderId)), {
+            it[0] as Int
+        })
     }
 
     override fun getItems(folderId: String?): Flowable<List<LocalData>> {
@@ -24,27 +30,27 @@ open class BaseRepository<RemoteData, LocalData> @Inject constructor(val localDa
     }
 
     override fun deleteItems(ids: List<String>): Single<Int> {
-        return if (ids.size > 0) {
+        return if (ids.isNotEmpty()) {
             Single.zip(listOf(localDataSource.deleteItems(ids),
                     remoteDataSource.deleteItems(ids)), {
-                it.get(0) as Int
+                it[0] as Int
             })
         } else {
             Single.just(0)
         }
     }
 
-    override fun saveItem(bookmark: LocalData): Single<String> {
-        return Single.zip(arrayListOf(localDataSource.saveItem(bookmark),
-                remoteDataSource.saveItem(bookmark)), {
-            it.get(0) as String
+    override fun saveItem(item: LocalData): Single<String> {
+        return Single.zip(arrayListOf(localDataSource.saveItem(item),
+                remoteDataSource.saveItem(item)), {
+            it[0] as String
         })
     }
 
-    override fun updateItem(bookmark: LocalData): Single<String> {
-        return Single.zip(arrayListOf(localDataSource.updateItem(bookmark),
-                remoteDataSource.updateItem(bookmark)), {
-            it.get(0) as String
+    override fun updateItem(item: LocalData): Single<String> {
+        return Single.zip(arrayListOf(localDataSource.updateItem(item),
+                remoteDataSource.updateItem(item)), {
+            it[0] as String
         })
     }
 
