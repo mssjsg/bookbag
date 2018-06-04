@@ -5,6 +5,7 @@ import github.io.mssjsg.bookbag.data.DataModule
 import github.io.mssjsg.bookbag.data.SyncDataManager
 import github.io.mssjsg.bookbag.folderselection.FolderSelectionComponent
 import github.io.mssjsg.bookbag.folderview.FolderViewComponent
+import github.io.mssjsg.bookbag.intro.IntroComponent
 import github.io.mssjsg.bookbag.main.MainComponent
 import github.io.mssjsg.bookbag.util.UtilModule
 import github.io.mssjsg.bookbag.util.executor.ExecutorModule
@@ -26,6 +27,8 @@ interface BookBagAppComponent {
     fun folderViewComponent(): FolderViewComponent
 
     fun mainComponent(): MainComponent
+
+    fun introComponent(): IntroComponent
 
     fun provideLiveBus(): LiveBus
     fun provideSyncDataManager(): SyncDataManager
