@@ -20,6 +20,10 @@ class BookbagUserData @Inject constructor(): LiveData<FirebaseUser>() {
         return firebaseAuth.currentUser
     }
 
+    fun signOut() {
+        firebaseAuth.signOut()
+    }
+
     val isSignedIn: Boolean
         get() = firebaseAuth.currentUser != null
 

@@ -7,6 +7,8 @@ import github.io.mssjsg.bookbag.list.ItemListViewModel
 import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 import github.io.mssjsg.bookbag.list.listitem.ListItem
+import github.io.mssjsg.bookbag.user.BookbagUserData
+import github.io.mssjsg.bookbag.user.GoogleAuthHelper
 import github.io.mssjsg.bookbag.util.Logger
 import github.io.mssjsg.bookbag.util.RxTransformers
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
@@ -25,7 +27,9 @@ class FolderViewViewModel @Inject constructor(application: BookBagApplication,
                                               val deleteFolderInteractor: DeleteFolderInteractor,
                                               val addBookmarkInteractor: AddBookmarkInteractor,
                                               val addFolderInteractor: AddFolderInteractor,
-                                              val moveItemsInteractor: MoveItemsInteractor) : ItemListViewModel(
+                                              val moveItemsInteractor: MoveItemsInteractor,
+                                              val googleAuthHelper: GoogleAuthHelper,
+                                              val bookbagUserData: BookbagUserData) : ItemListViewModel(
         application, logger, rxTransformers, liveBus, localLiveBus, loadPreviewInteractor,
         loadListItemsInteractor, loadFoldersPathsInteractor, getFolderInteractor) {
     lateinit var folderViewComponent: FolderViewComponent
@@ -110,4 +114,7 @@ class FolderViewViewModel @Inject constructor(application: BookBagApplication,
         })
     }
 
+    fun signOut() {
+        googleAuthHelper.signOut()
+    }
 }

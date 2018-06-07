@@ -41,6 +41,7 @@ class IntroFragment: BookbagFragment() {
         super.onActivityCreated(savedInstanceState)
         introViewModel = ViewModelProviders.of(this, IntroFragment.ViewModelFactory(getAppComponent()))
                 .get(IntroViewModel::class.java)
+        fragmentIntroBinding.viewmodel = introViewModel
 
         introViewModel.userData.observe(this, Observer {
             it?.let {

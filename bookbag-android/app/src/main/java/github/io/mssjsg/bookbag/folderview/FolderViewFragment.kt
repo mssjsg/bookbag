@@ -14,6 +14,7 @@ import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.databinding.FragmentFolderviewBinding
 import github.io.mssjsg.bookbag.folderselection.FolderSelectionFragment
 import github.io.mssjsg.bookbag.folderselection.event.FolderSelectionEvent
+import github.io.mssjsg.bookbag.intro.IntroFragment
 import github.io.mssjsg.bookbag.list.ItemListContainerFragment
 import github.io.mssjsg.bookbag.list.event.ItemClickEvent
 import github.io.mssjsg.bookbag.list.event.ItemLongClickEvent
@@ -58,6 +59,10 @@ class FolderViewFragment: ItemListContainerFragment<FolderViewViewModel>(), Acti
                                 title = getString(R.string.title_new_folder))
                                 .show(childFragmentManager, TAG_CREATE_NEW_FOLDER)
 
+                        true
+                    }
+                    R.id.item_sign_out -> {
+                        viewModel.signOut()
                         true
                     }
                     else -> false
@@ -110,6 +115,13 @@ class FolderViewFragment: ItemListContainerFragment<FolderViewViewModel>(), Acti
                     }
                 }
             }, FolderSelectionEvent::class)
+
+
+            viewModel.bookbagUserData.observe(this, Observer {
+                if (it == null) {
+                    navigationManager?.setCurrentFragment(IntroFragment.newInstance())
+                }
+            })
         }
 
         viewModel.isInMultiSelectionMode = false
