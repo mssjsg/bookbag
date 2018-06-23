@@ -1,6 +1,7 @@
 package github.io.mssjsg.bookbag.list
 
 import android.arch.lifecycle.AndroidViewModel
+import android.arch.lifecycle.ViewModel
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
 import androidx.core.util.arraySetOf
@@ -24,15 +25,14 @@ import javax.inject.Inject
  * Created by Sing on 26/3/2018.
  */
 @ViewModelScope
-open class ItemListViewModel @Inject constructor(val application: BookBagApplication,
-                                                 val logger: Logger,
+open class ItemListViewModel @Inject constructor(val logger: Logger,
                                                  val rxTransformers: RxTransformers,
                                                  val liveBus: LiveBus,
                                                  val localLiveBus: LocalLiveBus,
                                                  val loadPreviewInteractor: LoadPreviewInteractor,
                                                  val loadListItemsInteractor: LoadListItemsInteractor,
                                                  val loadFoldersPathsInteractor: LoadFolderPathsInteractor,
-                                                 val getFolderInteractor: GetFolderInteractor) : AndroidViewModel(application) {
+                                                 val getFolderInteractor: GetFolderInteractor) : ViewModel() {
 
     var isInMultiSelectionMode = false
         set(value) {

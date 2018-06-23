@@ -15,8 +15,7 @@ import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 import javax.inject.Inject
 
-class FolderViewViewModel @Inject constructor(application: BookBagApplication,
-                                              logger: Logger,
+class FolderViewViewModel @Inject constructor(logger: Logger,
                                               rxTransformers: RxTransformers,
                                               liveBus: LiveBus,
                                               localLiveBus: LocalLiveBus,
@@ -30,7 +29,7 @@ class FolderViewViewModel @Inject constructor(application: BookBagApplication,
                                               val moveItemsInteractor: MoveItemsInteractor,
                                               val googleAuthHelper: GoogleAuthHelper,
                                               val bookbagUserData: BookbagUserData) : ItemListViewModel(
-        application, logger, rxTransformers, liveBus, localLiveBus, loadPreviewInteractor,
+        logger, rxTransformers, liveBus, localLiveBus, loadPreviewInteractor,
         loadListItemsInteractor, loadFoldersPathsInteractor, getFolderInteractor) {
     lateinit var folderViewComponent: FolderViewComponent
 

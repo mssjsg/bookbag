@@ -9,8 +9,7 @@ import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 import javax.inject.Inject
 
-class FolderSelectionViewModel @Inject constructor(application: BookBagApplication,
-                                                   logger: Logger,
+class FolderSelectionViewModel @Inject constructor(logger: Logger,
                                                    rxTransformers: RxTransformers,
                                                    liveBus: LiveBus,
                                                    localLiveBus: LocalLiveBus,
@@ -18,7 +17,7 @@ class FolderSelectionViewModel @Inject constructor(application: BookBagApplicati
                                                    loadListItemsInteractor: LoadListItemsInteractor,
                                                    loadFoldersPathsInteractor: LoadFolderPathsInteractor,
                                                    getFolderInteractor: GetFolderInteractor) : ItemListViewModel(
-        application, logger, rxTransformers, liveBus, localLiveBus, loadPreviewInteractor,
+        logger, rxTransformers, liveBus, localLiveBus, loadPreviewInteractor,
         loadListItemsInteractor, loadFoldersPathsInteractor, getFolderInteractor) {
     lateinit var folderSelectionComponent: FolderSelectionComponent
 }
