@@ -4,6 +4,8 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelProviders
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.net.Uri
@@ -25,13 +27,18 @@ import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.util.extension.putFolderId
 import github.io.mssjsg.bookbag.widget.SimpleConfirmDialogFragment
 import github.io.mssjsg.bookbag.widget.SimpleInputDialogFragment
+import android.content.Context.CLIPBOARD_SERVICE
+import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
 
-class FolderViewFragment: ItemListContainerFragment<FolderViewViewModel>(), ActionMode.Callback {
+
+class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), ActionMode.Callback {
     private var actionMode: ActionMode? = null
     private lateinit var folderViewBinding: FragmentFolderviewBinding
 
     private var pendingNewBookmarkUrl: String? = null
     private var isShowingExitSnackbar: Boolean = false
+
+    private lateinit var clipboard: ClipboardManager
 
     fun addBookmark(url: String) {
         try {
@@ -48,6 +55,8 @@ class FolderViewFragment: ItemListContainerFragment<FolderViewViewModel>(), Acti
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        clipboard = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
         pendingNewBookmarkUrl?.let { viewModel.addBookmark(it) }
         pendingNewBookmarkUrl = null
@@ -130,6 +139,28 @@ class FolderViewFragment: ItemListContainerFragment<FolderViewViewModel>(), Acti
         viewModel.isInMultiSelectionMode = false
     }
 
+    override fun onResume() {
+        super.onResume()
+        handleClipboard()
+    }
+
+    private fun handleClipboard() {
+        if (clipboard.hasPrimaryClip()) {
+            clipboard.primaryClip.getItemAt(0).text?.let { text ->
+                val urls = SearchUrls.matches(text.toString())
+                if (urls.size > 0) {
+                    Snackbar.make(folderViewBinding.root, R.string.confirm_plaste_clipboard,
+                            Snackbar.LENGTH_LONG).apply {
+                        setAction(R.string.dialog_ok, {
+                            viewModel.addBookmark(text.toString())
+                            dismiss()
+                        })
+                    }.show()
+                }
+            }
+        }
+    }
+
     private fun onItemSelected(position: Int) {
         if (!viewModel.isInMultiSelectionMode) {
             viewModel.getListItem(position).let {
@@ -208,7 +239,7 @@ class FolderViewFragment: ItemListContainerFragment<FolderViewViewModel>(), Acti
                 dismiss()
             })
 
-            addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+            addCallback(object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
                 override fun onShown(transientBottomBar: Snackbar?) {
                     super.onShown(transientBottomBar)
                     isShowingExitSnackbar = true
