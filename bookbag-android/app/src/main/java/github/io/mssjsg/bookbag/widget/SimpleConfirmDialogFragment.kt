@@ -2,6 +2,7 @@ package github.io.mssjsg.bookbag.widget
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
 import github.io.mssjsg.bookbag.R
@@ -51,6 +52,11 @@ class SimpleConfirmDialogFragment : DialogFragment() {
                     dialogInterface, i -> liveBus.post(CancelEvent(requestId))
                 })
                 .create()
+    }
+
+    override fun onDismiss(dialog: DialogInterface?) {
+        super.onDismiss(dialog)
+        liveBus.post(CancelEvent(requestId))
     }
 
     data class ConfirmEvent(val requestId: String): LiveEvent()

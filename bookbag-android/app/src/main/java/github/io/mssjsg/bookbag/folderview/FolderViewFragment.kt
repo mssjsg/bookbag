@@ -25,10 +25,9 @@ import github.io.mssjsg.bookbag.list.event.ItemLongClickEvent
 import github.io.mssjsg.bookbag.list.event.ItemToggleEvent
 import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.util.extension.putFolderId
+import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
 import github.io.mssjsg.bookbag.widget.SimpleConfirmDialogFragment
 import github.io.mssjsg.bookbag.widget.SimpleInputDialogFragment
-import android.content.Context.CLIPBOARD_SERVICE
-import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
 
 
 class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), ActionMode.Callback {
@@ -109,7 +108,18 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
             it.subscribe(this, Observer {
                 it?.apply {
                     when (requestId) {
-                        CONFIRM_DIALOG_EXIT -> activity?.finish()
+                        CONFIRM_DIALOG_DELETE_ITEMS -> actionMode?.finish()
+                    }
+                }
+            }, SimpleConfirmDialogFragment.CancelEvent::class)
+
+            it.subscribe(this, Observer {
+                it?.apply {
+                    when (requestId) {
+                        CONFIRM_DIALOG_DELETE_ITEMS -> {
+                            viewModel.deleteSelectedItems()
+                            actionMode?.finish()
+                        }
                     }
                 }
             }, SimpleConfirmDialogFragment.ConfirmEvent::class)
@@ -183,8 +193,9 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
     override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.item_delete -> {
-                viewModel.deleteSelectedItems()
-                mode?.finish()
+                SimpleConfirmDialogFragment.newInstance(CONFIRM_DIALOG_DELETE_ITEMS,
+                        getString(R.string.confirm_delete_items)).show(fragmentManager,
+                        CONFIRM_DIALOG_DELETE_ITEMS)
                 true
             }
             R.id.item_move -> {
@@ -267,10 +278,9 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
     companion object {
         private const val TAG = "MainActivity"
         private const val CONFIRM_DIALOG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_CREATE_NEW_FOLDER"
-        private const val CONFIRM_DIALOG_EXIT = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_EXIT"
+        private const val CONFIRM_DIALOG_DELETE_ITEMS = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_DELETE_ITEMS"
         private const val TAG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.TAG_CREATE_NEW_FOLDER"
         private const val TAG_CREATE_MOVE = "github.io.mssjsg.bookbag.main.TAG_MOVE"
-        private const val TAG_EXIT = "github.io.mssjsg.bookbag.main.TAG_EXIT"
         private const val REQUEST_ID_MOVE_ITEMS = 1000
 
         fun newInstance(folderId: String? = null): FolderViewFragment {

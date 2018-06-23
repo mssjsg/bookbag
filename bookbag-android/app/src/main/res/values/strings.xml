@@ -14,6 +14,7 @@
     <string name="title_move_to_other">Moving %d items</string>
     <string name="confirm_exit">Press back again to exit</string>
     <string name="confirm_plaste_clipboard">You have a link in clipboard, add it to Bookbag?</string>
+    <string name="confirm_delete_items">Confirm delete items?</string>
     <string name="btn_confirm_move">Move here</string>
     <string name="btn_cancel">Cancel</string>
     <string name="btn_signin_google">Sign in with Google</string>
