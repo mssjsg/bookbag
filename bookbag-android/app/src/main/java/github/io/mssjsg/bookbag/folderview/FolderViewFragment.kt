@@ -1,6 +1,5 @@
 package github.io.mssjsg.bookbag.folderview
 
-import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelProviders
@@ -8,7 +7,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
-import android.databinding.Observable
 import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.BaseTransientBottomBar
@@ -21,6 +19,8 @@ import github.io.mssjsg.bookbag.folderselection.FolderSelectionFragment
 import github.io.mssjsg.bookbag.folderselection.event.FolderSelectionEvent
 import github.io.mssjsg.bookbag.intro.IntroFragment
 import github.io.mssjsg.bookbag.list.ItemListContainerFragment
+import github.io.mssjsg.bookbag.util.extension.observeNonNull
+import github.io.mssjsg.bookbag.util.extension.observeNullable
 import github.io.mssjsg.bookbag.util.extension.putFolderId
 import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
@@ -86,17 +86,15 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
             })
         }
 
-        viewModel.isInMultiSelectionMode.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                if (viewModel.isInMultiSelectionMode.get()) {
-                    actionMode = folderViewBinding.layoutToolbar.toolbar.startActionMode(this@FolderViewFragment)
-                } else {
-                    actionMode?.finish()
-                    actionMode = null
-                }
+        viewModel.isInMultiSelectionMode.observeNonNull(this, {
+            if (it) {
+                actionMode = folderViewBinding.layoutToolbar.toolbar.startActionMode(this@FolderViewFragment)
+            } else {
+                actionMode?.finish()
+                actionMode = null
             }
         })
-        viewModel.bookbagUserData.observe(this, Observer {
+        viewModel.bookbagUserData.observeNullable(this, {
             if (it == null) {
                 navigationManager?.setCurrentFragment(IntroFragment.newInstance())
             }
@@ -106,40 +104,32 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
     }
 
     private fun observeDialogEvents() {
-        liveBus.let {
-            it.subscribe(this, Observer {
-                it?.apply {
-                    when (requestId) {
-                        FolderViewFragment.CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.addFolder(input)
-                    }
+        liveBus.apply {
+            subscribe(this@FolderViewFragment, {
+                when (it.requestId) {
+                    FolderViewFragment.CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.addFolder(it.input)
                 }
             }, SimpleInputDialogFragment.ConfirmEvent::class)
 
-            it.subscribe(this, Observer {
-                it?.apply {
-                    when (requestId) {
-                        FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> actionMode?.finish()
-                    }
+            subscribe(this@FolderViewFragment, {
+                when (it.requestId) {
+                    FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> actionMode?.finish()
                 }
             }, SimpleConfirmDialogFragment.CancelEvent::class)
 
-            it.subscribe(this, Observer {
-                it?.apply {
-                    when (requestId) {
-                        FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> {
-                            viewModel.deleteSelectedItems()
-                            actionMode?.finish()
-                        }
+            subscribe(this@FolderViewFragment, {
+                when (it.requestId) {
+                    FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> {
+                        viewModel.deleteSelectedItems()
+                        actionMode?.finish()
                     }
                 }
             }, SimpleConfirmDialogFragment.ConfirmEvent::class)
 
-            it.subscribe(this, Observer {
-                it?.apply {
-                    when (requestId) {
-                        FolderViewFragment.REQUEST_ID_MOVE_ITEMS -> {
-                            viewModel.onFolderSelected(confirmed, folderId)
-                        }
+            subscribe(this@FolderViewFragment, {
+                when (it.requestId) {
+                    FolderViewFragment.REQUEST_ID_MOVE_ITEMS -> {
+                        viewModel.onFolderSelected(it.confirmed, it.folderId)
                     }
                 }
             }, FolderSelectionEvent::class)

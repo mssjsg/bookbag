@@ -1,8 +1,11 @@
 package github.io.mssjsg.bookbag.folderselection
 
-import android.databinding.ObservableBoolean
+import android.arch.lifecycle.MutableLiveData
 import github.io.mssjsg.bookbag.folderselection.event.FolderSelectionEvent
-import github.io.mssjsg.bookbag.interactor.itemlist.*
+import github.io.mssjsg.bookbag.interactor.itemlist.GetFolderInteractor
+import github.io.mssjsg.bookbag.interactor.itemlist.LoadFolderPathsInteractor
+import github.io.mssjsg.bookbag.interactor.itemlist.LoadListItemsInteractor
+import github.io.mssjsg.bookbag.interactor.itemlist.LoadPreviewInteractor
 import github.io.mssjsg.bookbag.list.ItemListViewModel
 import github.io.mssjsg.bookbag.util.Logger
 import github.io.mssjsg.bookbag.util.RxTransformers
@@ -22,12 +25,12 @@ class FolderSelectionViewModel @Inject constructor(logger: Logger,
 
     private val liveBus = liveBus
 
-    val isFinished: ObservableBoolean = ObservableBoolean()
+    val isFinished: MutableLiveData<Boolean> = MutableLiveData()
     var requestId: Int = -1
 
     fun onConfirmButtonClick() {
         liveBus.post(FolderSelectionEvent(requestId, true, currentFolderId))
-        isFinished.set(true)
+        isFinished.value = true
     }
 
     fun onCancelButtonClick() {

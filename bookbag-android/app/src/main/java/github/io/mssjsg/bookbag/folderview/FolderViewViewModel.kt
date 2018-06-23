@@ -1,8 +1,6 @@
 package github.io.mssjsg.bookbag.folderview
 
-import android.databinding.Observable
-import android.databinding.ObservableBoolean
-import android.databinding.ObservableField
+import android.arch.lifecycle.MutableLiveData
 import androidx.core.util.arraySetOf
 import github.io.mssjsg.bookbag.interactor.itemlist.*
 import github.io.mssjsg.bookbag.list.ItemListViewModel
@@ -31,19 +29,20 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
         loadListItemsInteractor, loadFoldersPathsInteractor, getFolderInteractor) {
     lateinit var folderViewComponent: FolderViewComponent
 
-    var pageState: ObservableField<PageState> = ObservableField(PageState.BROWSE)
     var webPageViewer: WebPageViewer? = null
 
-    var isInMultiSelectionMode: ObservableBoolean = ObservableBoolean(false)
+    var pageState: MutableLiveData<PageState> = MutableLiveData()
+    var isInMultiSelectionMode: MutableLiveData<Boolean> = MutableLiveData()
         private set
 
     private var selectedItemsCache: MutableSet<ListItem> = arraySetOf()
         private set
 
     init {
-        isInMultiSelectionMode.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                if (!isInMultiSelectionMode.get()) {
+        isInMultiSelectionMode.value = false
+        isInMultiSelectionMode.observeForever({
+            it?.apply {
+                if (!it) {
                     for (i in items.indices) {
                         items.get(i).let {
                             if (it.isSelected) {
@@ -60,15 +59,15 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
 
     override fun onViewLoaded(folder: String?) {
         super.onViewLoaded(folder)
-        isInMultiSelectionMode.set(false)
-        pageState.set(PageState.BROWSE)
+        isInMultiSelectionMode.value = false
+        pageState.value = PageState.BROWSE
     }
 
     override fun onItemClick(position: Int): Boolean {
-        if (isInMultiSelectionMode.get()) {
+        if (isInMultiSelectionMode.value != null && isInMultiSelectionMode.value!!) {
             toggleSelected(position)
             if (selectedItemCount == 0) {
-                isInMultiSelectionMode.set(false)
+                isInMultiSelectionMode.value = false
             }
             return true
         } else {
@@ -91,12 +90,12 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
     }
 
     fun onSelectionModeDismissed() {
-        isInMultiSelectionMode.set(false)
+        isInMultiSelectionMode.value = false
     }
 
     override fun onItemLongClick(position: Int): Boolean {
         super.onItemLongClick(position)
-        isInMultiSelectionMode.set(true)
+        isInMultiSelectionMode.value = true
         return true
     }
 

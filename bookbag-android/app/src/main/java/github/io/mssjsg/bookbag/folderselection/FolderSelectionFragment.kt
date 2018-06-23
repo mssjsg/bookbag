@@ -1,10 +1,10 @@
 package github.io.mssjsg.bookbag.folderselection
 
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelProviders
 import android.databinding.DataBindingUtil
-import android.databinding.Observable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,10 +13,11 @@ import github.io.mssjsg.bookbag.BookBagAppComponent
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.databinding.FragmentSelectFolderBinding
 import github.io.mssjsg.bookbag.list.ItemListContainerFragment
+import github.io.mssjsg.bookbag.util.extension.observeNonNull
 import github.io.mssjsg.bookbag.util.extension.putFilteredFolderIds
 import github.io.mssjsg.bookbag.util.extension.putFolderId
 
-class FolderSelectionFragment: ItemListContainerFragment<FolderSelectionViewModel>() {
+class FolderSelectionFragment : ItemListContainerFragment<FolderSelectionViewModel>() {
 
     private lateinit var mainBinding: FragmentSelectFolderBinding
 
@@ -47,11 +48,9 @@ class FolderSelectionFragment: ItemListContainerFragment<FolderSelectionViewMode
             viewModel.onCancelButtonClick()
         })
 
-        viewModel.isFinished.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
-            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
-                if (viewModel.isFinished.get()) {
-                    fragmentManager?.popBackStackImmediate()
-                }
+        viewModel.isFinished.observeNonNull(this, {
+            if (it) {
+                fragmentManager?.popBackStackImmediate()
             }
         })
     }
@@ -69,7 +68,7 @@ class FolderSelectionFragment: ItemListContainerFragment<FolderSelectionViewMode
                 .get(FolderSelectionViewModel::class.java)
     }
 
-    private class ViewModelFactory(val viewModelComponent: BookBagAppComponent): ViewModelProvider.NewInstanceFactory() {
+    private class ViewModelFactory(val viewModelComponent: BookBagAppComponent) : ViewModelProvider.NewInstanceFactory() {
 
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
             return viewModelComponent.folderSelectionComponent().let { component ->
@@ -85,7 +84,7 @@ class FolderSelectionFragment: ItemListContainerFragment<FolderSelectionViewMode
         const val ARG_CONFIRM_BUTTON = "github.io.mssjsg.bookbag.folderselection.ARG_CONFIRM_BUTTON"
         const val ARG_REQUEST_ID = "github.io.mssjsg.bookbag.folderselection.ARG_REQUEST_ID"
 
-        fun newInstance(requestId:Int, folderId: String?, filteredFolderIds: Array<String>,
+        fun newInstance(requestId: Int, folderId: String?, filteredFolderIds: Array<String>,
                         title: String, confirmButton: String): FolderSelectionFragment {
             val bundle = Bundle()
             bundle?.apply {
