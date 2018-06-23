@@ -2,15 +2,12 @@ package github.io.mssjsg.bookbag.list
 
 import android.support.v7.widget.RecyclerView
 import github.io.mssjsg.bookbag.databinding.ItemFolderBinding
-import github.io.mssjsg.bookbag.list.event.ItemClickEvent
-import github.io.mssjsg.bookbag.list.event.ItemLongClickEvent
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
-import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 
 /**
  * Created by Sing on 26/3/2018.
  */
-class FolderListItemViewHolder(private val localLive: LocalLiveBus, private val itemFolderBinding: ItemFolderBinding) : RecyclerView.ViewHolder(itemFolderBinding.root) {
+class FolderListItemViewHolder(private val listItemListViewModel: ItemListViewModel, private val itemFolderBinding: ItemFolderBinding) : RecyclerView.ViewHolder(itemFolderBinding.root) {
 
     var listItem: FolderListItem? = null
         set(value) {
@@ -22,9 +19,12 @@ class FolderListItemViewHolder(private val localLive: LocalLiveBus, private val 
     init {
         itemFolderBinding.root.setOnClickListener {
             if (listItem?.isFiltered == false) {
-                localLive.post(ItemClickEvent(adapterPosition))
+                listItemListViewModel.onItemClick(adapterPosition)
             }
         }
-        itemFolderBinding.root.setOnLongClickListener { localLive.post(ItemLongClickEvent(adapterPosition)); true }
+        itemFolderBinding.root.setOnLongClickListener {
+            listItemListViewModel.onItemLongClick(adapterPosition)
+            true
+        }
     }
 }

@@ -1,6 +1,5 @@
 package github.io.mssjsg.bookbag.list
 
-import android.arch.lifecycle.Observer
 import android.content.Context
 import android.databinding.DataBindingUtil
 import android.os.Bundle
@@ -12,10 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.databinding.FragmentListBinding
-import github.io.mssjsg.bookbag.list.event.ItemClickEvent
-import github.io.mssjsg.bookbag.list.event.ItemLongClickEvent
-import github.io.mssjsg.bookbag.list.event.ItemToggleEvent
-import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 
 class ItemListFragment : Fragment() {
 
@@ -42,17 +37,7 @@ class ItemListFragment : Fragment() {
 
         //init view model
         viewModel = itemListViewModelProvider.getItemListViewModel()
-        viewModel.loadFolder(getFolderId(this))
-        viewModel.localLiveBus.let {
-            //init event
-            it.subscribe(this, Observer {
-                viewModel.setSelected(it!!.position, true)
-            }, ItemLongClickEvent::class)
-
-            it.subscribe(this, Observer {
-                it?.let { onItemSelected(it.position) }
-            }, ItemClickEvent::class)
-        }
+        viewModel.onViewLoaded(getFolderId(this))
 
         //init adapter
         mainListAdapter = MainListAdapter(viewModel)
@@ -63,13 +48,6 @@ class ItemListFragment : Fragment() {
         listBinding.bookmarksList.adapter = mainListAdapter
         listBinding.bookmarksList.addItemDecoration(DividerItemDecoration(activity, LinearLayoutManager.VERTICAL))
         listBinding.pathsList.adapter = pathListAdapter
-    }
-
-    fun onItemSelected(position: Int) {
-        if (viewModel.isInMultiSelectionMode) {
-            viewModel.toggleSelected(position)
-            viewModel.localLiveBus.post(ItemToggleEvent(position))
-        }
     }
 
     companion object {

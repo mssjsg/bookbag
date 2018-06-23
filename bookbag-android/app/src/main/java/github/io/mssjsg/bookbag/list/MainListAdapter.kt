@@ -16,8 +16,10 @@ class MainListAdapter(val itemListViewModel: ItemListViewModel) : RecyclerView.A
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         return when(viewType) {
-            ItemListViewModel.ITEM_VIEW_TYPE_FOLDER -> FolderListItemViewHolder(itemListViewModel.localLiveBus, ItemFolderBinding.inflate(layoutInflater, parent, false))
-            else -> BookmarkListItemViewHolder(itemListViewModel.localLiveBus, ItemBookmarkBinding.inflate(layoutInflater, parent, false))
+            ItemListViewModel.ITEM_VIEW_TYPE_FOLDER -> FolderListItemViewHolder(itemListViewModel,
+                    ItemFolderBinding.inflate(layoutInflater, parent, false))
+            else -> BookmarkListItemViewHolder(itemListViewModel,
+                    ItemBookmarkBinding.inflate(layoutInflater, parent, false))
         }
     }
 

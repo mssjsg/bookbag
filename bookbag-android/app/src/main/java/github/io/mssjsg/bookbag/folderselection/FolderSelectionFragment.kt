@@ -4,12 +4,14 @@ import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelProviders
 import android.databinding.DataBindingUtil
+import android.databinding.Observable
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import github.io.mssjsg.bookbag.BookBagAppComponent
 import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.databinding.FragmentSelectFolderBinding
-import github.io.mssjsg.bookbag.folderselection.event.FolderSelectionEvent
 import github.io.mssjsg.bookbag.list.ItemListContainerFragment
 import github.io.mssjsg.bookbag.util.extension.putFilteredFolderIds
 import github.io.mssjsg.bookbag.util.extension.putFolderId
@@ -17,6 +19,11 @@ import github.io.mssjsg.bookbag.util.extension.putFolderId
 class FolderSelectionFragment: ItemListContainerFragment<FolderSelectionViewModel>() {
 
     private lateinit var mainBinding: FragmentSelectFolderBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel.requestId = FolderSelectionFragment.getRequestId(this)
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         mainBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_select_folder, container, false)
@@ -33,34 +40,28 @@ class FolderSelectionFragment: ItemListContainerFragment<FolderSelectionViewMode
         mainBinding.btnConfirm.text = getConfirmButtonText(this)
 
         mainBinding.btnConfirm.setOnClickListener({
-            viewModel.liveBus.post(FolderSelectionEvent(getRequestId(this), true, viewModel.currentFolderId))
-            fragmentManager?.popBackStackImmediate()
+            viewModel.onConfirmButtonClick()
         })
 
         mainBinding.btnCanecl.setOnClickListener({
-            viewModel.liveBus.post(FolderSelectionEvent(getRequestId(this), false))
-            fragmentManager?.popBackStackImmediate()
+            viewModel.onCancelButtonClick()
+        })
+
+        viewModel.isFinished.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+                if (viewModel.isFinished.get()) {
+                    fragmentManager?.popBackStackImmediate()
+                }
+            }
         })
     }
 
     override fun onBackPressed(): Boolean {
-        return super.onBackPressed().apply {
-            if (!this) {
-                viewModel.liveBus.post(FolderSelectionEvent(
-                        getRequestId(this@FolderSelectionFragment),
-                        false, viewModel.currentFolderId)
-                )
-            }
-        }
+        return viewModel.onBackPressed()
     }
 
     override fun isSignInRequired(): Boolean {
         return true
-    }
-
-    override fun onViewModelCreated(viewModel: FolderSelectionViewModel) {
-        super.onViewModelCreated(viewModel)
-        viewModel.isShowingBookmarks = false
     }
 
     override fun onCreateViewModel(): FolderSelectionViewModel {

@@ -8,6 +8,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
+import android.databinding.Observable
 import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.BaseTransientBottomBar
@@ -20,17 +21,17 @@ import github.io.mssjsg.bookbag.folderselection.FolderSelectionFragment
 import github.io.mssjsg.bookbag.folderselection.event.FolderSelectionEvent
 import github.io.mssjsg.bookbag.intro.IntroFragment
 import github.io.mssjsg.bookbag.list.ItemListContainerFragment
-import github.io.mssjsg.bookbag.list.event.ItemClickEvent
-import github.io.mssjsg.bookbag.list.event.ItemLongClickEvent
-import github.io.mssjsg.bookbag.list.event.ItemToggleEvent
-import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.util.extension.putFolderId
 import github.io.mssjsg.bookbag.util.linkpreview.SearchUrls
+import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.widget.SimpleConfirmDialogFragment
 import github.io.mssjsg.bookbag.widget.SimpleInputDialogFragment
+import javax.inject.Inject
 
 
-class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), ActionMode.Callback {
+class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), ActionMode.Callback,
+        FolderViewViewModel.WebPageViewer {
+
     private var actionMode: ActionMode? = null
     private lateinit var folderViewBinding: FragmentFolderviewBinding
 
@@ -38,6 +39,9 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
     private var isShowingExitSnackbar: Boolean = false
 
     private lateinit var clipboard: ClipboardManager
+
+    @Inject
+    lateinit var liveBus: LiveBus
 
     fun addBookmark(url: String) {
         try {
@@ -55,6 +59,7 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+        viewModel.folderViewComponent.inject(this)
         clipboard = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
         pendingNewBookmarkUrl?.let { viewModel.addBookmark(it) }
@@ -81,26 +86,31 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
             })
         }
 
-        viewModel.localLiveBus.let {
-            //init event
-            it.subscribe(this, Observer {
-                actionMode = folderViewBinding.layoutToolbar.toolbar.startActionMode(this)
-            }, ItemLongClickEvent::class)
+        viewModel.isInMultiSelectionMode.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+                if (viewModel.isInMultiSelectionMode.get()) {
+                    actionMode = folderViewBinding.layoutToolbar.toolbar.startActionMode(this@FolderViewFragment)
+                } else {
+                    actionMode?.finish()
+                    actionMode = null
+                }
+            }
+        })
+        viewModel.bookbagUserData.observe(this, Observer {
+            if (it == null) {
+                navigationManager?.setCurrentFragment(IntroFragment.newInstance())
+            }
+        })
 
-            it.subscribe(this, Observer {
-                it?.let { onItemSelected(it.position) }
-            }, ItemClickEvent::class)
+        observeDialogEvents()
+    }
 
-            it.subscribe(this, Observer {
-                if (viewModel.selectedItemCount == 0) actionMode?.finish()
-            }, ItemToggleEvent::class)
-        }
-
-        viewModel.liveBus.let {
+    private fun observeDialogEvents() {
+        liveBus.let {
             it.subscribe(this, Observer {
                 it?.apply {
                     when (requestId) {
-                        CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.addFolder(input)
+                        FolderViewFragment.CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.addFolder(input)
                     }
                 }
             }, SimpleInputDialogFragment.ConfirmEvent::class)
@@ -108,7 +118,7 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
             it.subscribe(this, Observer {
                 it?.apply {
                     when (requestId) {
-                        CONFIRM_DIALOG_DELETE_ITEMS -> actionMode?.finish()
+                        FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> actionMode?.finish()
                     }
                 }
             }, SimpleConfirmDialogFragment.CancelEvent::class)
@@ -116,7 +126,7 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
             it.subscribe(this, Observer {
                 it?.apply {
                     when (requestId) {
-                        CONFIRM_DIALOG_DELETE_ITEMS -> {
+                        FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> {
                             viewModel.deleteSelectedItems()
                             actionMode?.finish()
                         }
@@ -127,26 +137,23 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
             it.subscribe(this, Observer {
                 it?.apply {
                     when (requestId) {
-                        REQUEST_ID_MOVE_ITEMS -> {
-                            if (confirmed) {
-                                viewModel.moveSelectedItems(folderId)
-                                viewModel.loadFolder(folderId)
-                            }
-                            viewModel.clearCachedSelectedItems()
+                        FolderViewFragment.REQUEST_ID_MOVE_ITEMS -> {
+                            viewModel.onFolderSelected(confirmed, folderId)
                         }
                     }
                 }
             }, FolderSelectionEvent::class)
-
-
-            viewModel.bookbagUserData.observe(this, Observer {
-                if (it == null) {
-                    navigationManager?.setCurrentFragment(IntroFragment.newInstance())
-                }
-            })
         }
+    }
 
-        viewModel.isInMultiSelectionMode = false
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel.webPageViewer = this
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.webPageViewer = null
     }
 
     override fun onResume() {
@@ -166,20 +173,6 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
                             dismiss()
                         })
                     }.show()
-                }
-            }
-        }
-    }
-
-    private fun onItemSelected(position: Int) {
-        if (!viewModel.isInMultiSelectionMode) {
-            viewModel.getListItem(position).let {
-                when (it) {
-                    is BookmarkListItem -> {
-                        val i = Intent(Intent.ACTION_VIEW)
-                        i.data = Uri.parse(it.url)
-                        startActivity(i)
-                    }
                 }
             }
         }
@@ -227,12 +220,11 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
     }
 
     override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-        viewModel.isInMultiSelectionMode = true
         return false
     }
 
     override fun onDestroyActionMode(mode: ActionMode?) {
-        viewModel.isInMultiSelectionMode = false
+        viewModel.onSelectionModeDismissed()
     }
 
     override fun onBackPressed(): Boolean {
@@ -264,6 +256,12 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
         }.show()
 
         return true
+    }
+
+    override fun showPage(url: String) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+        startActivity(intent)
     }
 
     private class ViewModelFactory(val viewModelComponent: BookBagAppComponent) : ViewModelProvider.NewInstanceFactory() {

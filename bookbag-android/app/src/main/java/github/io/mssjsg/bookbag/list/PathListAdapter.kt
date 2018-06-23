@@ -8,7 +8,7 @@ import github.io.mssjsg.bookbag.databinding.ItemFolderPathBinding
 class PathListAdapter(private val itemListViewModel: ItemListViewModel): RecyclerView.Adapter<PathViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PathViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        return PathViewHolder(itemListViewModel.localLiveBus,
+        return PathViewHolder(itemListViewModel,
                 ItemFolderPathBinding.inflate(layoutInflater, parent, false))
     }
 

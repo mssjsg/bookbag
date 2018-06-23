@@ -7,4 +7,5 @@ import github.io.mssjsg.bookbag.ViewModelScope
 @ViewModelScope
 interface FolderViewComponent {
     fun provideFolderViewModel(): FolderViewViewModel
+    fun inject(folderViewFragment: FolderViewFragment)
 }

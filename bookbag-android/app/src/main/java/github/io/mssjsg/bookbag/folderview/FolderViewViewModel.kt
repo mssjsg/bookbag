@@ -1,7 +1,9 @@
 package github.io.mssjsg.bookbag.folderview
 
+import android.databinding.Observable
+import android.databinding.ObservableBoolean
+import android.databinding.ObservableField
 import androidx.core.util.arraySetOf
-import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.interactor.itemlist.*
 import github.io.mssjsg.bookbag.list.ItemListViewModel
 import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
@@ -11,14 +13,10 @@ import github.io.mssjsg.bookbag.user.BookbagUserData
 import github.io.mssjsg.bookbag.user.GoogleAuthHelper
 import github.io.mssjsg.bookbag.util.Logger
 import github.io.mssjsg.bookbag.util.RxTransformers
-import github.io.mssjsg.bookbag.util.livebus.LiveBus
-import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 import javax.inject.Inject
 
 class FolderViewViewModel @Inject constructor(logger: Logger,
                                               rxTransformers: RxTransformers,
-                                              liveBus: LiveBus,
-                                              localLiveBus: LocalLiveBus,
                                               loadPreviewInteractor: LoadPreviewInteractor,
                                               loadListItemsInteractor: LoadListItemsInteractor,
                                               loadFoldersPathsInteractor: LoadFolderPathsInteractor,
@@ -29,12 +27,86 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
                                               val moveItemsInteractor: MoveItemsInteractor,
                                               val googleAuthHelper: GoogleAuthHelper,
                                               val bookbagUserData: BookbagUserData) : ItemListViewModel(
-        logger, rxTransformers, liveBus, localLiveBus, loadPreviewInteractor,
+        logger, rxTransformers, loadPreviewInteractor,
         loadListItemsInteractor, loadFoldersPathsInteractor, getFolderInteractor) {
     lateinit var folderViewComponent: FolderViewComponent
 
-    var selectedItemsCache: MutableSet<ListItem> = arraySetOf()
+    var pageState: ObservableField<PageState> = ObservableField(PageState.BROWSE)
+    var webPageViewer: WebPageViewer? = null
+
+    var isInMultiSelectionMode: ObservableBoolean = ObservableBoolean(false)
         private set
+
+    private var selectedItemsCache: MutableSet<ListItem> = arraySetOf()
+        private set
+
+    init {
+        isInMultiSelectionMode.addOnPropertyChangedCallback(object : Observable.OnPropertyChangedCallback() {
+            override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+                if (!isInMultiSelectionMode.get()) {
+                    for (i in items.indices) {
+                        items.get(i).let {
+                            if (it.isSelected) {
+                                it.isSelected = false
+                                items.set(i, it)
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+
+    override fun onViewLoaded(folder: String?) {
+        super.onViewLoaded(folder)
+        isInMultiSelectionMode.set(false)
+        pageState.set(PageState.BROWSE)
+    }
+
+    override fun onItemClick(position: Int): Boolean {
+        if (isInMultiSelectionMode.get()) {
+            toggleSelected(position)
+            if (selectedItemCount == 0) {
+                isInMultiSelectionMode.set(false)
+            }
+            return true
+        } else {
+            if (super.onItemClick(position)) {
+                return true
+            }
+
+            getListItem(position).let {
+                when (it) {
+                    is BookmarkListItem -> {
+                        webPageViewer?.showPage(it.url)
+                        return true
+                    }
+                    else -> {
+                        return false
+                    }
+                }
+            }
+        }
+    }
+
+    fun onSelectionModeDismissed() {
+        isInMultiSelectionMode.set(false)
+    }
+
+    override fun onItemLongClick(position: Int): Boolean {
+        super.onItemLongClick(position)
+        isInMultiSelectionMode.set(true)
+        return true
+    }
+
+    fun onFolderSelected(confirmed: Boolean, folderId: String?) {
+        if (confirmed) {
+            moveSelectedItems(folderId)
+            loadFolder(folderId)
+        }
+        clearCachedSelectedItems()
+    }
 
     fun cacheSelectedItems() {
         selectedItemsCache.clear()
@@ -115,5 +187,15 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
 
     fun signOut() {
         googleAuthHelper.signOut()
+    }
+
+    enum class PageState {
+        BROWSE,
+        ADD_FOLDER,
+        MOVE_ITEMS
+    }
+
+    interface WebPageViewer {
+        fun showPage(url: String)
     }
 }

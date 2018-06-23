@@ -1,22 +1,20 @@
 package github.io.mssjsg.bookbag.list
 
-import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.ViewModel
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
-import androidx.core.util.arraySetOf
-import github.io.mssjsg.bookbag.BookBagApplication
 import github.io.mssjsg.bookbag.ViewModelScope
 import github.io.mssjsg.bookbag.data.Folder
-import github.io.mssjsg.bookbag.interactor.itemlist.*
+import github.io.mssjsg.bookbag.interactor.itemlist.GetFolderInteractor
+import github.io.mssjsg.bookbag.interactor.itemlist.LoadFolderPathsInteractor
+import github.io.mssjsg.bookbag.interactor.itemlist.LoadListItemsInteractor
+import github.io.mssjsg.bookbag.interactor.itemlist.LoadPreviewInteractor
 import github.io.mssjsg.bookbag.list.listitem.BookmarkListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderListItem
 import github.io.mssjsg.bookbag.list.listitem.FolderPathItem
 import github.io.mssjsg.bookbag.list.listitem.ListItem
 import github.io.mssjsg.bookbag.util.Logger
 import github.io.mssjsg.bookbag.util.RxTransformers
-import github.io.mssjsg.bookbag.util.livebus.LiveBus
-import github.io.mssjsg.bookbag.util.livebus.LocalLiveBus
 import io.reactivex.disposables.CompositeDisposable
 import javax.inject.Inject
 
@@ -27,35 +25,13 @@ import javax.inject.Inject
 @ViewModelScope
 open class ItemListViewModel @Inject constructor(val logger: Logger,
                                                  val rxTransformers: RxTransformers,
-                                                 val liveBus: LiveBus,
-                                                 val localLiveBus: LocalLiveBus,
                                                  val loadPreviewInteractor: LoadPreviewInteractor,
                                                  val loadListItemsInteractor: LoadListItemsInteractor,
                                                  val loadFoldersPathsInteractor: LoadFolderPathsInteractor,
                                                  val getFolderInteractor: GetFolderInteractor) : ViewModel() {
 
-    var isInMultiSelectionMode = false
-        set(value) {
-            field = value
-            if (!value) {
-                for (i in items.indices) {
-                    items.get(i).let {
-                        if (it.isSelected) {
-                            it.isSelected = false
-                            items.set(i, it)
-                        }
-                    }
-                }
-            }
-        }
-
-    var currentFolderId: String? = null
     val items: ObservableList<ListItem> = ObservableArrayList()
     val paths: ObservableList<FolderPathItem> = ObservableArrayList()
-    var isShowingBookmarks: Boolean = true
-
-    private lateinit var disposables: CompositeDisposable
-    private var currentFolder: Folder? = null
     lateinit var filteredFolders: Array<String>
 
     val parentFolderId: String?
@@ -65,7 +41,52 @@ open class ItemListViewModel @Inject constructor(val logger: Logger,
         private set
         get() = items.filter { it.isSelected }.size
 
-    fun loadCurrentFolder() {
+    var folderViewer: FolderViewer? = null
+
+    var currentFolderId: String? = null
+        protected set
+    private lateinit var disposables: CompositeDisposable
+    private var currentFolder: Folder? = null
+
+    open fun onViewLoaded(folder: String?) {
+        loadFolder(folder)
+    }
+
+    open fun onItemClick(position: Int): Boolean {
+        items.get(position).let { item ->
+            if (item is FolderListItem) {
+                folderViewer?.showFolder(item.folderId, TransitionType.FORWARD)
+                return true
+            }
+        }
+
+        return false
+    }
+
+    open fun onItemLongClick(position: Int): Boolean {
+        toggleSelected(position)
+        return true
+    }
+
+    fun onPathSelected(folderId: String?) {
+        folderId?.let {
+            if (!it.isEmpty()) {
+                folderViewer?.showFolder(folderId, TransitionType.BACKWARD)
+            } else {
+                folderViewer?.showFolder(null, TransitionType.BACKWARD)
+            }
+        }
+    }
+
+    open fun onBackPressed(): Boolean {
+        if (currentFolderId == null) {
+            return false
+        }
+        folderViewer?.showFolder(parentFolderId, TransitionType.BACKWARD)
+        return true
+    }
+
+    protected fun loadCurrentFolder() {
         items.clear()
         paths.clear()
 
@@ -128,7 +149,7 @@ open class ItemListViewModel @Inject constructor(val logger: Logger,
         }
     }
 
-    fun toggleSelected(position: Int) {
+    protected fun toggleSelected(position: Int) {
         getListItem(position)?.apply {
             isSelected = !isSelected
             items.set(position, this)
@@ -150,11 +171,11 @@ open class ItemListViewModel @Inject constructor(val logger: Logger,
         disposables.dispose()
     }
 
-    fun loadParentFolder() {
+    protected fun loadParentFolder() {
         currentFolder?.let { loadFolder(it.parentFolderId) }
     }
 
-    fun loadFolder(folderId: String?) {
+    protected fun loadFolder(folderId: String?) {
         currentFolderId = folderId
         loadCurrentFolder()
     }
@@ -178,5 +199,13 @@ open class ItemListViewModel @Inject constructor(val logger: Logger,
         const val ITEM_VIEW_TYPE_UNKNOWN = -1
         const val ITEM_VIEW_TYPE_BOOKMARK = 0
         const val ITEM_VIEW_TYPE_FOLDER = 1
+    }
+
+    interface FolderViewer {
+        fun showFolder(folderId: String?, transitionType: TransitionType)
+    }
+
+    enum class TransitionType {
+        FRESH, FORWARD, BACKWARD
     }
 }
