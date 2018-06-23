@@ -8,6 +8,8 @@ import android.content.Intent
 import android.databinding.DataBindingUtil
 import android.net.Uri
 import android.os.Bundle
+import android.support.design.widget.BaseTransientBottomBar
+import android.support.design.widget.Snackbar
 import android.view.*
 import github.io.mssjsg.bookbag.BookBagAppComponent
 import github.io.mssjsg.bookbag.R
@@ -29,6 +31,7 @@ class FolderViewFragment: ItemListContainerFragment<FolderViewViewModel>(), Acti
     private lateinit var folderViewBinding: FragmentFolderviewBinding
 
     private var pendingNewBookmarkUrl: String? = null
+    private var isShowingExitSnackbar: Boolean = false
 
     fun addBookmark(url: String) {
         try {
@@ -195,9 +198,29 @@ class FolderViewFragment: ItemListContainerFragment<FolderViewViewModel>(), Acti
             return super.onBackPressed()
         }
 
-        SimpleConfirmDialogFragment.newInstance(CONFIRM_DIALOG_EXIT,
-                title = getString(R.string.confirm_exit))
-                .show(childFragmentManager, TAG_EXIT)
+        if (isShowingExitSnackbar) {
+            activity?.finish()
+            return true
+        }
+
+        Snackbar.make(folderViewBinding.root, R.string.confirm_exit, Snackbar.LENGTH_SHORT).apply {
+            setAction(R.string.dialog_cancel, {
+                dismiss()
+            })
+
+            addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                override fun onShown(transientBottomBar: Snackbar?) {
+                    super.onShown(transientBottomBar)
+                    isShowingExitSnackbar = true
+                }
+
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    super.onDismissed(transientBottomBar, event)
+                    isShowingExitSnackbar = false
+                }
+            })
+        }.show()
+
         return true
     }
 

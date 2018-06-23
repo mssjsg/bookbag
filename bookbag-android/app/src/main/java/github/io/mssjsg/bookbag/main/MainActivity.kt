@@ -2,7 +2,6 @@ package github.io.mssjsg.bookbag.main
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.TextUtils
 import github.io.mssjsg.bookbag.BookbagActivity
 import github.io.mssjsg.bookbag.BookbagFragment
 import github.io.mssjsg.bookbag.NavigationManager
