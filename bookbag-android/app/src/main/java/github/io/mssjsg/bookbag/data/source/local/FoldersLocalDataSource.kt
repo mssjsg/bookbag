@@ -18,13 +18,12 @@ class FoldersLocalDataSource @Inject constructor(val foldersDao: FoldersDao) : B
 
     override fun moveItem(folderId: String, parentFolderId: String?): Single<Int> {
         return foldersDao.getFolder(folderId)
-                .firstOrError()
                 .map { folder ->
                     foldersDao.updateFolder(folder.copy(parentFolderId = parentFolderId, dirty = true))
                 }
     }
 
-    override fun getItem(folderId: String): Flowable<Folder> {
+    override fun getItem(folderId: String): Single<Folder> {
         return foldersDao.getFolder(folderId)
     }
 

@@ -53,7 +53,6 @@ class SyncDataManager @Inject constructor(val userData: BookbagUserData,
             remoteDataSource.listeners.add(object: RemoteDataSource.OnRemoteDataChangedListener<RemoteData> {
                 override fun onItemAdded(data: RemoteData) {
                     localDataSource.getItem(remoteDataSource.getIdFromRemoteData(data))
-                            .firstOrError()
                             .subscribeOn(schedulers.io())
                             .subscribe({
                                 if (it == null) {

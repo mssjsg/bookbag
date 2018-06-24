@@ -15,11 +15,10 @@ class LoadPreviewInteractor @Inject constructor(val urlPreviewManager: UrlPrevie
         }).flatMap { item ->
             val previewUrl = item.previewUrl
             val title = item.title
-            bookmarksRepository.getItem(param)
-                    .firstOrError().flatMap { bookmark ->
+            bookmarksRepository.getItem(param).flatMap { bookmark ->
                         bookmarksRepository.updateItem(bookmark.copy(imageUrl = previewUrl, name = title, dirty = true))
                     }.flatMap {
-                        bookmarksRepository.getItem(it).firstOrError()
+                        bookmarksRepository.getItem(it)
                     }
         }
     }

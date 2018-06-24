@@ -35,6 +35,7 @@ class FolderSelectionViewModel @Inject constructor(logger: Logger,
 
     fun onCancelButtonClick() {
         liveBus.post(FolderSelectionEvent(requestId, false))
+        isFinished.value = true
     }
 
     override fun onBackPressed(): Boolean {

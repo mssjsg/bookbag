@@ -3,6 +3,7 @@ package github.io.mssjsg.bookbag.data.source.local
 import android.arch.persistence.room.*
 import github.io.mssjsg.bookbag.data.Folder
 import io.reactivex.Flowable
+import io.reactivex.Single
 
 /**
  * Created by Sing on 27/3/2018.
@@ -20,7 +21,7 @@ interface FoldersDao {
     fun getFoldersByParentFolderId(folderId: String): Flowable<List<Folder>>
 
     @Query("SELECT * FROM folders WHERE folder_id = :folderId")
-    fun getFolder(folderId: String): Flowable<Folder>
+    fun getFolder(folderId: String): Single<Folder>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertFolder(folder: Folder)

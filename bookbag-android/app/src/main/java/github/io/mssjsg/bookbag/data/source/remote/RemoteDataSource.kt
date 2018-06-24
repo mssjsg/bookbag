@@ -5,7 +5,6 @@ import github.io.mssjsg.bookbag.data.source.BookbagDataSource
 import github.io.mssjsg.bookbag.user.BookbagUserData
 import github.io.mssjsg.bookbag.util.extension.encodeForFirebaseKey
 import io.reactivex.Flowable
-import io.reactivex.Observable
 import io.reactivex.Single
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -94,7 +93,7 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
         })
     }
 
-    override final fun getItem(id: String): Flowable<LocalData> {
+    override final fun getItem(id: String): Single<LocalData> {
         throw UnsupportedOperationException("not supported query item")
     }
 

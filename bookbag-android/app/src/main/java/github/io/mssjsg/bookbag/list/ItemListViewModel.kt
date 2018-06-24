@@ -45,7 +45,7 @@ open class ItemListViewModel @Inject constructor(val logger: Logger,
 
     var currentFolderId: String? = null
         protected set
-    private lateinit var disposables: CompositeDisposable
+    protected lateinit var disposables: CompositeDisposable
     private var currentFolder: Folder? = null
 
     open fun onViewLoaded(folder: String?) {
@@ -96,9 +96,9 @@ open class ItemListViewModel @Inject constructor(val logger: Logger,
 
         disposables = CompositeDisposable()
 
-        disposables.add(getFolderInteractor.getFlowable(currentFolderId).subscribe({
+        disposables.add(getFolderInteractor.getSingle(currentFolderId).subscribe({
             currentFolder = it.folder
-        }))
+        }, {}))
 
         disposables.add(loadListItemsInteractor.getFlowable(LoadListItemsInteractor.Param(currentFolderId, filteredFolders))
                 .compose(rxTransformers.applySchedulersOnFlowable()).subscribe { listItems ->

@@ -12,7 +12,7 @@ interface BookbagDataSource<Item> {
 
     fun deleteItems(ids: List<String>): Single<Int>
 
-    fun getItem(id: String): Flowable<Item>
+    fun getItem(id: String): Single<Item>
 
     fun getItems(folderId: String? = null) : Flowable<List<Item>>
 

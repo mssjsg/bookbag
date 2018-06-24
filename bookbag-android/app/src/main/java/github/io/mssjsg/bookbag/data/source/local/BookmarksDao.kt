@@ -3,6 +3,7 @@ package github.io.mssjsg.bookbag.data.source.local
 import android.arch.persistence.room.*
 import github.io.mssjsg.bookbag.data.Bookmark
 import io.reactivex.Flowable
+import io.reactivex.Single
 
 /**
  * Created by Sing on 27/3/2018.
@@ -11,7 +12,7 @@ import io.reactivex.Flowable
 interface BookmarksDao {
 
     @Query("SELECT * FROM bookmarks WHERE url = :url")
-    fun getBookmark(url: String): Flowable<Bookmark>
+    fun getBookmark(url: String): Single<Bookmark>
 
     @Query("SELECT * FROM bookmarks WHERE folder_id IS NULL")
     fun getHomeBookmarks(): Flowable<List<Bookmark>>

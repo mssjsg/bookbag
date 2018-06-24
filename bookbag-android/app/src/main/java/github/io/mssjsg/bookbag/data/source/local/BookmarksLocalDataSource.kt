@@ -12,7 +12,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class BookmarksLocalDataSource @Inject constructor(val bookmarksDao: BookmarksDao) : BookbagDataSource<Bookmark> {
-    override fun getItem(id: String): Flowable<Bookmark> {
+    override fun getItem(id: String): Single<Bookmark> {
         return bookmarksDao.getBookmark(id)
     }
 
@@ -22,7 +22,6 @@ class BookmarksLocalDataSource @Inject constructor(val bookmarksDao: BookmarksDa
 
     override fun moveItem(id: String, folderId: String?): Single<Int> {
         return bookmarksDao.getBookmark(id)
-                .firstOrError()
                 .map { bookmark ->
                     bookmarksDao.updateBookmark(bookmark.copy(folderId = folderId, dirty = true))
                 }

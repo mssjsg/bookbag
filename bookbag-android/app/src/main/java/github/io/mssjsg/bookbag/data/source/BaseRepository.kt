@@ -10,7 +10,7 @@ open class BaseRepository<RemoteData, LocalData> @Inject constructor(
         private val remoteDataSource: RemoteDataSource<RemoteData, LocalData>
 ): BookbagDataSource<LocalData> {
 
-    override fun getItem(id: String): Flowable<LocalData> {
+    override fun getItem(id: String): Single<LocalData> {
         return localDataSource.getItem(id)
     }
 

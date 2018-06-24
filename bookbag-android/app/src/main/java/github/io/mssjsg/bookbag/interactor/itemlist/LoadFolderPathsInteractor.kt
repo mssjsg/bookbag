@@ -21,7 +21,7 @@ class LoadFolderPathsInteractor @Inject constructor(val foldersRepository: Folde
 
     private fun getFolders(currentFolderId: String?, folderId: String?, folderPathItems: MutableList<Folder> = ArrayList()): Single<List<Folder>> {
         folderId?.let {
-            return foldersRepository.getItem(it).firstOrError().flatMap {
+            return foldersRepository.getItem(it).flatMap {
                 folderPathItems.add(0, it)
                 getFolders(currentFolderId, it.parentFolderId, folderPathItems)
             }

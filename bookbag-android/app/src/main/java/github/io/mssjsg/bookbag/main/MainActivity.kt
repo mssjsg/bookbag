@@ -53,9 +53,7 @@ class MainActivity : BookbagActivity(), NavigationManager {
         val sharedUrl = intent?.getSharedUrl() ?: ""
         val isSignedIn = bookbagUserData.isSignedIn
         if (sharedUrl.isNotEmpty()) {
-            newFragment = FolderViewFragment.newInstance().apply {
-                addBookmark(sharedUrl)
-            }
+            newFragment = FolderViewFragment.newInstance(sharedUrl = sharedUrl)
         } else {
             var currentFragment = getCurrentFragment()
             currentFragment?.let {
