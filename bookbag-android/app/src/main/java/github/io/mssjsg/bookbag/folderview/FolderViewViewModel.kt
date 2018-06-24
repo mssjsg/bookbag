@@ -42,6 +42,7 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
 
     init {
         isInMultiSelectionMode.value = false
+        pageState.value = PageState.BROWSE
         pageState.observeForever({
             it?.apply {
                 when (it) {
@@ -74,12 +75,6 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
 
         isShowingExitConfirmNotice.value = true
         return true
-    }
-
-    override fun onViewLoaded(folder: String?) {
-        super.onViewLoaded(folder)
-        isInMultiSelectionMode.value = false
-        pageState.value = PageState.BROWSE
     }
 
     override fun onItemClick(position: Int): Boolean {
@@ -202,6 +197,10 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
 
     fun onExitNoticeDismissed() {
         isShowingExitConfirmNotice.value = false
+    }
+
+    fun onCancelNewFolder() {
+        pageState.value = PageState.BROWSE
     }
 
     private fun addBookmark(url: String) {

@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.BaseTransientBottomBar
 import android.support.design.widget.Snackbar
+import android.support.v4.app.Fragment
 import android.view.*
 import github.io.mssjsg.bookbag.BookBagAppComponent
 import github.io.mssjsg.bookbag.R
@@ -28,9 +29,9 @@ import github.io.mssjsg.bookbag.widget.SimpleInputDialogFragment
 import javax.inject.Inject
 
 
-class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), ActionMode.Callback,
-        FolderViewViewModel.WebPageViewer {
-
+class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(),
+        ActionMode.Callback, FolderViewViewModel.WebPageViewer, SimpleInputDialogFragment.Listener,
+        SimpleConfirmDialogFragment.Listener{
     private var actionMode: ActionMode? = null
     private var clipboardNoticeSnackbar: Snackbar? = null
     private var exitNoticeSnackbar: Snackbar? = null
@@ -41,6 +42,22 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
     @Inject
     lateinit var liveBus: LiveBus
 
+    override fun onViewModelCreated(viewModel: FolderViewViewModel) {
+        super.onViewModelCreated(viewModel)
+        viewModel.folderViewComponent.inject(this)
+        observeViewModel()
+        observeDialogEvents()
+    }
+
+    override fun onAttachFragment(childFragment: Fragment?) {
+        super.onAttachFragment(childFragment)
+        if (childFragment is SimpleConfirmDialogFragment) {
+            childFragment.listener = this
+        } else if (childFragment is SimpleInputDialogFragment) {
+            childFragment.listener = this
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         folderViewBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_folderview, container, false)
         return folderViewBinding.root
@@ -48,8 +65,6 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-
-        viewModel.folderViewComponent.inject(this)
         clipboard = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
         getSharedUrl(this)?.let {
@@ -71,9 +86,6 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
                 }
             })
         }
-
-        observeViewModel()
-        observeDialogEvents()
     }
 
     private fun observeViewModel() {
@@ -84,7 +96,7 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
                     setAction(R.string.dialog_ok, {
                         viewModel.onConfirmAddBookmarkFromClipboard()
                     })
-                }.addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                }.addCallback(object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
                     override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                         super.onDismissed(transientBottomBar, event)
                         clipboardNoticeSnackbar = null
@@ -112,36 +124,51 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
         viewModel.pageState.observeNonNull(this, {
             when (it) {
                 FolderViewViewModel.PageState.DELETING_ITEMS -> {
-                    SimpleConfirmDialogFragment.newInstance(CONFIRM_DIALOG_DELETE_ITEMS,
-                            getString(R.string.confirm_delete_items))
-                            .show(childFragmentManager, TAG_CONFIRM_DELETE)
+                    if (childFragmentManager.findFragmentByTag(TAG_CONFIRM_DELETE) == null) {
+                        SimpleConfirmDialogFragment.newInstance(CONFIRM_DIALOG_DELETE_ITEMS,
+                                getString(R.string.confirm_delete_items))
+                                .show(childFragmentManager, TAG_CONFIRM_DELETE)
+                    }
                 }
                 FolderViewViewModel.PageState.MOVING_ITEMS -> {
-                    val selectedCount = viewModel.selectedItemCount
-                    val title = when (selectedCount) {
-                        1 -> R.string.title_move_to_one
-                        else -> R.string.title_move_to_other
-                    }.let { getString(it, selectedCount) }
-                    val fragment = FolderSelectionFragment.newInstance(
-                            REQUEST_ID_MOVE_ITEMS,
-                            viewModel.currentFolderId,
-                            viewModel.getSelectedFolderIds().toTypedArray(),
-                            title,
-                            getString(R.string.btn_confirm_move)
-                    )
-                    navigationManager?.addToBackStack(fragment, TAG_CREATE_MOVE, R.anim.pop_enter_animation, R.anim.pop_exit_animation)
+                    navigationManager?.let { navigationManager ->
+                        if (navigationManager.isFragmentAdded(TAG_CONFIRM_DELETE)) {
+                            return@observeNonNull
+                        }
+
+                        val selectedCount = viewModel.selectedItemCount
+                        val title = when (selectedCount) {
+                            1 -> R.string.title_move_to_one
+                            else -> R.string.title_move_to_other
+                        }.let { getString(it, selectedCount) }
+                        val fragment = FolderSelectionFragment.newInstance(
+                                REQUEST_ID_MOVE_ITEMS,
+                                viewModel.currentFolderId,
+                                viewModel.getSelectedFolderIds().toTypedArray(),
+                                title,
+                                getString(R.string.btn_confirm_move)
+                        )
+                        navigationManager.addToBackStack(fragment, TAG_CREATE_MOVE, R.anim.pop_enter_animation, R.anim.pop_exit_animation)
+                    }
                 }
                 FolderViewViewModel.PageState.ADDING_FOLDER -> {
-                    SimpleInputDialogFragment.newInstance(CONFIRM_DIALOG_CREATE_NEW_FOLDER,
-                            hint = getString(R.string.hint_folder_name),
-                            title = getString(R.string.title_new_folder))
-                            .show(childFragmentManager, TAG_CREATE_NEW_FOLDER)
+                    if (childFragmentManager.findFragmentByTag(TAG_CREATE_NEW_FOLDER) == null) {
+                        SimpleInputDialogFragment.newInstance(CONFIRM_DIALOG_CREATE_NEW_FOLDER,
+                                hint = getString(R.string.hint_folder_name),
+                                title = getString(R.string.title_new_folder))
+                                .show(childFragmentManager, TAG_CREATE_NEW_FOLDER)
+                    }
 
                     true
                 }
                 FolderViewViewModel.PageState.BROWSE -> {
-                    while (childFragmentManager.backStackEntryCount > 0) {
-                        childFragmentManager.popBackStackImmediate()
+                    childFragmentManager?.apply {
+                        arrayOf(TAG_CONFIRM_DELETE, TAG_CREATE_MOVE, TAG_CREATE_NEW_FOLDER).forEach {
+                            val fragment = findFragmentByTag(it)
+                            fragment?.apply {
+                                beginTransaction().remove(this).commit()
+                            }
+                        }
                     }
                 }
                 FolderViewViewModel.PageState.FINISHED -> {
@@ -181,24 +208,6 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
 
     private fun observeDialogEvents() {
         liveBus.apply {
-            subscribe(this@FolderViewFragment, {
-                when (it.requestId) {
-                    FolderViewFragment.CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.onConfirmNewFolderName(it.input)
-                }
-            }, SimpleInputDialogFragment.ConfirmEvent::class)
-
-            subscribe(this@FolderViewFragment, {
-                when (it.requestId) {
-                    FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> viewModel.onCancelDeleteItems()
-                }
-            }, SimpleConfirmDialogFragment.CancelEvent::class)
-
-            subscribe(this@FolderViewFragment, {
-                when (it.requestId) {
-                    FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> viewModel.onConfirmDeleteItems()
-                }
-            }, SimpleConfirmDialogFragment.ConfirmEvent::class)
-
             subscribe(this@FolderViewFragment, {
                 when (it.requestId) {
                     FolderViewFragment.REQUEST_ID_MOVE_ITEMS -> {
@@ -277,6 +286,30 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(), Act
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = Uri.parse(url)
         startActivity(intent)
+    }
+
+    override fun onConfirm(simpleInputDialogFragment: SimpleInputDialogFragment, requestId: String, input: String) {
+        when (requestId) {
+            FolderViewFragment.CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.onConfirmNewFolderName(input)
+        }
+    }
+
+    override fun onCancel(simpleInputDialogFragment: SimpleInputDialogFragment, requestId: String) {
+        when (requestId) {
+            FolderViewFragment.CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.onCancelNewFolder()
+        }
+    }
+
+    override fun onConfirm(simpleConfirmDialogFragment: SimpleConfirmDialogFragment, requestId: String) {
+        when (requestId) {
+            FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> viewModel.onConfirmDeleteItems()
+        }
+    }
+
+    override fun onCancel(simpleConfirmDialogFragment: SimpleConfirmDialogFragment, requestId: String) {
+        when (requestId) {
+            FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> viewModel.onCancelDeleteItems()
+        }
     }
 
     private class ViewModelFactory(val viewModelComponent: BookBagAppComponent) : ViewModelProvider.NewInstanceFactory() {

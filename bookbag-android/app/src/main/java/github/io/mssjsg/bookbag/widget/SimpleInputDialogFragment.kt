@@ -2,6 +2,7 @@ package github.io.mssjsg.bookbag.widget
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.support.design.widget.TextInputLayout
 import android.support.v4.app.DialogFragment
@@ -34,7 +35,7 @@ class SimpleInputDialogFragment : DialogFragment() {
     private lateinit var title: String
     private lateinit var requestId: String
 
-    private lateinit var liveBus: LiveBus
+    var listener: Listener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,27 +44,27 @@ class SimpleInputDialogFragment : DialogFragment() {
             requestId = getString(ARG_REQUEST_ID) ?: ""
             title = getString(ARG_TITLE) ?: ""
         }
-
-        liveBus = getAppComponent().provideLiveBus()
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val view = LayoutInflater.from(context).inflate(R.layout.dialog_fragment_simple_input, null)
         val editText = view.findViewById<EditText>(R.id.edit_input)
         view.findViewById<TextInputLayout>(R.id.input_layout).hint = hint
-        return AlertDialog.Builder(activity)
+        val builder = AlertDialog.Builder(activity)
                 .setTitle(title)
                 .setView(view)
                 .setPositiveButton(R.string.dialog_ok, {
-                    dialogInterface, i -> liveBus.post(ConfirmEvent(requestId, editText.text.toString()))
+                    dialogInterface, i -> listener?.onConfirm(this, requestId, editText.text.toString())
                 })
                 .setNegativeButton(R.string.dialog_cancel, {
-                    dialogInterface, i -> liveBus.post(CancelEvent(requestId))
+                    dialogInterface, i -> listener?.onCancel(this, requestId)
                 })
-                .create()
+        isCancelable = false
+        return builder.create()
     }
 
-    data class ConfirmEvent(val requestId: String, val input: String): LiveEvent()
-
-    data class CancelEvent(val requestId: String): LiveEvent()
+    interface Listener {
+        fun onConfirm(simpleInputDialogFragment: SimpleInputDialogFragment, requestId: String, input: String)
+        fun onCancel(simpleInputDialogFragment: SimpleInputDialogFragment, requestId: String)
+    }
 }

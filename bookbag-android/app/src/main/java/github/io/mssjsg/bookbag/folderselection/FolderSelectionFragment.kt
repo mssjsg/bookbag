@@ -20,8 +20,8 @@ class FolderSelectionFragment : ItemListContainerFragment<FolderSelectionViewMod
 
     private lateinit var mainBinding: FragmentSelectFolderBinding
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onViewModelCreated(viewModel: FolderSelectionViewModel) {
+        super.onViewModelCreated(viewModel)
         viewModel.requestId = FolderSelectionFragment.getRequestId(this)
     }
 

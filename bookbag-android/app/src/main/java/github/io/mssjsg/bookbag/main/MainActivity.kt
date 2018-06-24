@@ -14,6 +14,7 @@ import javax.inject.Inject
 
 
 class MainActivity : BookbagActivity(), NavigationManager {
+
     @Inject
     lateinit var bookbagUserData: BookbagUserData
 
@@ -41,10 +42,14 @@ class MainActivity : BookbagActivity(), NavigationManager {
         }
     }
 
+    override fun isFragmentAdded(tag: String): Boolean {
+        return supportFragmentManager.findFragmentByTag(tag) != null
+    }
+
     override fun addToBackStack(fragment: BookbagFragment, tag: String, enter: Int, exit: Int) {
         supportFragmentManager.beginTransaction()
                 .setCustomAnimations(enter, exit, enter, exit)
-                .add(R.id.container, fragment)
+                .add(R.id.container, fragment, tag)
                 .addToBackStack(tag).commit()
     }
 

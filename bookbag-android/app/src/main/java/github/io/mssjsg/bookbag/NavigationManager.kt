@@ -8,4 +8,6 @@ interface NavigationManager {
                        @AnimatorRes @AnimRes exit: Int = 0)
 
     fun setCurrentFragment(fragment: BookbagFragment)
+
+    fun isFragmentAdded(tag: String): Boolean
 }
