@@ -64,8 +64,7 @@ open class ItemListViewModel @Inject constructor(val logger: Logger,
     }
 
     open fun onItemLongClick(position: Int): Boolean {
-        toggleSelected(position)
-        return true
+        return false
     }
 
     fun onPathSelected(folderId: String?) {

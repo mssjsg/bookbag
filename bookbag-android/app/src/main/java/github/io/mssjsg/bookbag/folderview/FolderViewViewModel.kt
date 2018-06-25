@@ -41,24 +41,28 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
     var isShowingPasteFromClipboardNotice: MutableLiveData<Boolean> = MutableLiveData()
 
     init {
-        isInMultiSelectionMode.value = false
         pageState.value = PageState.BROWSE
+        isInMultiSelectionMode.value = false
         pageState.observeForever({
             it?.apply {
                 when (it) {
                     PageState.BROWSE, PageState.FINISHED -> {
-                        for (i in items.indices) {
-                            items.get(i).let {
-                                if (it.isSelected) {
-                                    it.isSelected = false
-                                    items.set(i, it)
-                                }
-                            }
-                        }
+                        clearSelection()
                     }
                 }
             }
         })
+    }
+
+    private fun clearSelection() {
+        for (i in items.indices) {
+            items.get(i).let {
+                if (it.isSelected) {
+                    it.isSelected = false
+                    items.set(i, it)
+                }
+            }
+        }
     }
 
     override fun onBackPressed(): Boolean {
@@ -106,6 +110,9 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
 
     fun onSelectionModeDismissed() {
         isInMultiSelectionMode.value = false
+        if (pageState.value == PageState.BROWSE) {
+            clearSelection()
+        }
     }
 
     fun onPasteClipboardNoticeDismissed() {
@@ -135,7 +142,7 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
     }
 
     override fun onItemLongClick(position: Int): Boolean {
-        super.onItemLongClick(position)
+        toggleSelected(position)
         isInMultiSelectionMode.value = true
         return true
     }
@@ -152,8 +159,8 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
     }
 
     fun onCancelFolderSelection() {
-        isInMultiSelectionMode.value = false
         pageState.value = PageState.BROWSE
+        isInMultiSelectionMode.value = false
     }
 
     fun onConfirmNewFolderName(folderName: String) {
@@ -169,8 +176,8 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
 
     fun onConfirmDeleteItems() {
         deleteSelectedItems()
-        isInMultiSelectionMode.value = false
         pageState.value = PageState.BROWSE
+        isInMultiSelectionMode.value = false
     }
 
     fun onCancelDeleteItems() {
