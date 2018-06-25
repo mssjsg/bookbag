@@ -10,4 +10,7 @@ import javax.inject.Singleton
 /**
  * Created by Sing on 27/3/2018.
  */
-interface FoldersRepository : BookbagDataSource<Folder>
+@Singleton
+class DefaultFoldersRepository @Inject constructor(foldersLocalDataSource: FoldersLocalDataSource,
+                                                   foldersRemoteDataSource: FoldersRemoteDataSource):
+        BaseRepository<FirebaseFolder, Folder>(foldersLocalDataSource, foldersRemoteDataSource), FoldersRepository

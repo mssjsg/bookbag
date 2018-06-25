@@ -7,9 +7,13 @@ import android.content.Context
 import com.google.firebase.database.FirebaseDatabase
 import dagger.Module
 import dagger.Provides
-import github.io.mssjsg.bookbag.data.source.local.BookBagDatabase
-import github.io.mssjsg.bookbag.data.source.local.BookmarksDao
-import github.io.mssjsg.bookbag.data.source.local.FoldersDao
+import github.io.mssjsg.bookbag.data.source.BookmarksRepository
+import github.io.mssjsg.bookbag.data.source.DefaultBookmarksRepository
+import github.io.mssjsg.bookbag.data.source.DefaultFoldersRepository
+import github.io.mssjsg.bookbag.data.source.FoldersRepository
+import github.io.mssjsg.bookbag.data.source.local.*
+import github.io.mssjsg.bookbag.data.source.remote.BookmarksRemoteDataSource
+import github.io.mssjsg.bookbag.data.source.remote.FoldersRemoteDataSource
 import javax.inject.Singleton
 
 /**
@@ -41,5 +45,19 @@ class DataModule {
     @Singleton
     fun provideFirebaseDatabase(): FirebaseDatabase {
         return FirebaseDatabase.getInstance()
+    }
+
+    @Provides
+    @Singleton
+    fun provideFoldersRepository(foldersLocalDataSource: FoldersLocalDataSource,
+                                 foldersRemoteDataSource: FoldersRemoteDataSource): FoldersRepository {
+        return DefaultFoldersRepository(foldersLocalDataSource, foldersRemoteDataSource)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBookmarksRepository(bookmarksLocalDataSource: BookmarksLocalDataSource,
+                                   bookmarksRemoteDataSource: BookmarksRemoteDataSource): BookmarksRepository {
+        return DefaultBookmarksRepository(bookmarksLocalDataSource, bookmarksRemoteDataSource)
     }
 }
