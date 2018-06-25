@@ -2,8 +2,10 @@ package github.io.mssjsg.bookbag.list
 
 import android.content.Context
 import android.databinding.DataBindingUtil
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.content.res.ResourcesCompat
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
 import android.view.LayoutInflater
@@ -46,7 +48,9 @@ class ItemListFragment : Fragment() {
         //init bind views
         listBinding.viewmodel = viewModel
         listBinding.bookmarksList.adapter = mainListAdapter
-        listBinding.bookmarksList.addItemDecoration(DividerItemDecoration(activity, LinearLayoutManager.VERTICAL))
+        listBinding.bookmarksList.addItemDecoration(DividerItemDecoration(activity, LinearLayoutManager.VERTICAL).apply {
+            setDrawable(ColorDrawable(ResourcesCompat.getColor(resources, R.color.divider, null)))
+        })
         listBinding.pathsList.adapter = pathListAdapter
     }
 

@@ -24,7 +24,8 @@
             app:layout_constraintTop_toTopOf="parent"
             app:paths="@{viewmodel.paths}"
             android:orientation="horizontal"
-            app:layoutManager="android.support.v7.widget.LinearLayoutManager"/>
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+            android:background="@color/primary_light"/>
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/bookmarks_list"

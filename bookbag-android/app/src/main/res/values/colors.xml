@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">@color/colorGreen1</color>
-    <color name="colorPrimaryDark">@color/colorGreen2</color>
-    <color name="colorAccent">#c4a842</color>
-    <color name="colorText">#000000</color>
-    <color name="colorTextFolderName">#888888</color>
-    <color name="colorTextFiltered">#aaaaaa</color>
+    <color name="primary">#8BC34A</color>
+    <color name="primary_dark">#689F38</color>
+    <color name="primary_light">#DCEDC8</color>
+    <color name="accent">#d4e157</color>
+    <color name="primary_text">#212121</color>
+    <color name="secondary_text">#757575</color>
+    <color name="icons">#212121</color>
+    <color name="text_filtered">#aaaaaa</color>
+    <color name="divider">#b5db8a</color>
+    <color name="path_backgournd">@color/divider</color>
+    <color name="action_mode_background">#b5db8a</color>
 
-    <color name="colorGreen1">#9ace5f</color>
-    <color name="colorGreen2">#7da84d</color>
-    <color name="colorGreen3">#daedc4</color>
-    <color name="colorGreen4">#5c892a</color>
-    <color name="colorGreen5">#b5db8a</color>
+    <color name="bottom_action_divider">#daedc4</color>
+    <color name="bottom_action_background">#b5db8a</color>
 </resources>

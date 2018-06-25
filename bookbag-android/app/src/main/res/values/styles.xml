@@ -3,20 +3,16 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
         <item name="windowActionModeOverlay">true</item>
-    </style>
-
-    <style name="ActionModeOverflowMenu" parent="Widget.AppCompat.ListPopupWindow">
-        <item name="android:textColor">@android:color/white</item>
-        <item name="android:background">@color/colorPrimaryDark</item>
+        <item name="actionModeBackground">@color/action_mode_background</item>
     </style>
 
     <style name="FolderTitle">
         <item name="android:textSize">@dimen/normal_100</item>
-        <item name="android:textColor">@color/colorTextFolderName</item>
+        <item name="android:textColor">@color/primary_dark</item>
     </style>
 
     <style name="BookmarkTitle" parent="TextAppearance.AppCompat.Headline">
@@ -26,7 +22,7 @@
     <style name="SelectFolderBtn">
         <item name="android:textSize">@dimen/normal_100</item>
         <item name="android:textAllCaps">true</item>
-        <item name="android:textColor">@color/colorGreen4</item>
+        <item name="android:textColor">@color/primary_dark</item>
     </style>
 
 </resources>

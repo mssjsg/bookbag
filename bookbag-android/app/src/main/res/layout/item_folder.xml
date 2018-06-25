@@ -33,7 +33,7 @@
             android:paddingVertical="?attr/listPreferredItemPaddingLeft"
             android:singleLine="true"
             android:text="@{item.name}"
-            android:textColor="@{item.isFiltered ? @color/colorTextFiltered : @color/colorText}"
+            android:textColor="@{item.isFiltered ? @color/text_filtered : @color/primary_text}"
             app:layout_constraintEnd_toStartOf="@+id/thumbnail"
             app:layout_constraintStart_toStartOf="parent"
             tools:text="testing"/>
