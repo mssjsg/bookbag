@@ -124,11 +124,19 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
     }
 
     fun onSignOutButtonClick() {
+        pageState.value = PageState.CONFIRM_SIGN_OUT
+    }
+
+    fun onConfirmSignOut() {
         signOut()
     }
 
+    fun onCancelSignOut() {
+        pageState.value = PageState.BROWSE
+    }
+
     fun onDeleteItemsButtonClick() {
-        pageState.value = PageState.DELETING_ITEMS
+        pageState.value = PageState.CONFIRM_DELETE
         isInMultiSelectionMode.value = false
     }
 
@@ -285,9 +293,10 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
 
     enum class PageState {
         BROWSE,
-        ADDING_FOLDER,
-        DELETING_ITEMS,
         MOVING_ITEMS,
+        ADDING_FOLDER,
+        CONFIRM_DELETE,
+        CONFIRM_SIGN_OUT,
         FINISHED
     }
 

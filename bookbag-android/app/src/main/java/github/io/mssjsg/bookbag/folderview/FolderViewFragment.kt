@@ -123,16 +123,23 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(),
 
         viewModel.pageState.observeNonNull(this, {
             when (it) {
-                FolderViewViewModel.PageState.DELETING_ITEMS -> {
-                    if (childFragmentManager.findFragmentByTag(TAG_CONFIRM_DELETE) == null) {
+                FolderViewViewModel.PageState.CONFIRM_SIGN_OUT -> {
+                    if (childFragmentManager.findFragmentByTag(TAG_CONFIRM_DIALOG) == null) {
+                        SimpleConfirmDialogFragment.newInstance(CONFIRM_DIALOG_SIGN_OUT,
+                                getString(R.string.confirm_sign_out))
+                                .show(childFragmentManager, TAG_CONFIRM_DIALOG)
+                    }
+                }
+                FolderViewViewModel.PageState.CONFIRM_DELETE -> {
+                    if (childFragmentManager.findFragmentByTag(TAG_CONFIRM_DIALOG) == null) {
                         SimpleConfirmDialogFragment.newInstance(CONFIRM_DIALOG_DELETE_ITEMS,
                                 getString(R.string.confirm_delete_items))
-                                .show(childFragmentManager, TAG_CONFIRM_DELETE)
+                                .show(childFragmentManager, TAG_CONFIRM_DIALOG)
                     }
                 }
                 FolderViewViewModel.PageState.MOVING_ITEMS -> {
                     navigationManager?.let { navigationManager ->
-                        if (navigationManager.isFragmentAdded(TAG_CONFIRM_DELETE)) {
+                        if (navigationManager.isFragmentAdded(TAG_CONFIRM_DIALOG)) {
                             return@observeNonNull
                         }
 
@@ -148,22 +155,22 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(),
                                 title,
                                 getString(R.string.btn_confirm_move)
                         )
-                        navigationManager.addToBackStack(fragment, TAG_CREATE_MOVE, R.anim.pop_enter_animation, R.anim.pop_exit_animation)
+                        navigationManager.addToBackStack(fragment, TAG_MOVE, R.anim.pop_enter_animation, R.anim.pop_exit_animation)
                     }
                 }
                 FolderViewViewModel.PageState.ADDING_FOLDER -> {
-                    if (childFragmentManager.findFragmentByTag(TAG_CREATE_NEW_FOLDER) == null) {
+                    if (childFragmentManager.findFragmentByTag(TAG_INPUT_DIALOG) == null) {
                         SimpleInputDialogFragment.newInstance(CONFIRM_DIALOG_CREATE_NEW_FOLDER,
                                 hint = getString(R.string.hint_folder_name),
                                 title = getString(R.string.title_new_folder))
-                                .show(childFragmentManager, TAG_CREATE_NEW_FOLDER)
+                                .show(childFragmentManager, TAG_INPUT_DIALOG)
                     }
 
                     true
                 }
                 FolderViewViewModel.PageState.BROWSE -> {
                     childFragmentManager?.apply {
-                        arrayOf(TAG_CONFIRM_DELETE, TAG_CREATE_MOVE, TAG_CREATE_NEW_FOLDER).forEach {
+                        arrayOf(TAG_CONFIRM_DIALOG, TAG_MOVE, TAG_INPUT_DIALOG).forEach {
                             val fragment = findFragmentByTag(it)
                             fragment?.apply {
                                 beginTransaction().remove(this).commit()
@@ -290,25 +297,27 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(),
 
     override fun onConfirm(simpleInputDialogFragment: SimpleInputDialogFragment, requestId: String, input: String) {
         when (requestId) {
-            FolderViewFragment.CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.onConfirmNewFolderName(input)
+            CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.onConfirmNewFolderName(input)
         }
     }
 
     override fun onCancel(simpleInputDialogFragment: SimpleInputDialogFragment, requestId: String) {
         when (requestId) {
-            FolderViewFragment.CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.onCancelNewFolder()
+            CONFIRM_DIALOG_CREATE_NEW_FOLDER -> viewModel.onCancelNewFolder()
         }
     }
 
     override fun onConfirm(simpleConfirmDialogFragment: SimpleConfirmDialogFragment, requestId: String) {
         when (requestId) {
-            FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> viewModel.onConfirmDeleteItems()
+            CONFIRM_DIALOG_DELETE_ITEMS -> viewModel.onConfirmDeleteItems()
+            CONFIRM_DIALOG_SIGN_OUT -> viewModel.onConfirmSignOut()
         }
     }
 
     override fun onCancel(simpleConfirmDialogFragment: SimpleConfirmDialogFragment, requestId: String) {
         when (requestId) {
-            FolderViewFragment.CONFIRM_DIALOG_DELETE_ITEMS -> viewModel.onCancelDeleteItems()
+            CONFIRM_DIALOG_DELETE_ITEMS -> viewModel.onCancelDeleteItems()
+            CONFIRM_DIALOG_SIGN_OUT -> viewModel.onCancelSignOut()
         }
     }
 
@@ -325,9 +334,10 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(),
         private const val TAG = "MainActivity"
         private const val CONFIRM_DIALOG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_CREATE_NEW_FOLDER"
         private const val CONFIRM_DIALOG_DELETE_ITEMS = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_DELETE_ITEMS"
-        private const val TAG_CREATE_NEW_FOLDER = "github.io.mssjsg.bookbag.main.TAG_CREATE_NEW_FOLDER"
-        private const val TAG_CREATE_MOVE = "github.io.mssjsg.bookbag.main.TAG_MOVE"
-        private const val TAG_CONFIRM_DELETE = "github.io.mssjsg.bookbag.main.TAG_CONFIRM_DELETE"
+        private const val CONFIRM_DIALOG_SIGN_OUT = "github.io.mssjsg.bookbag.main.CONFIRM_DIALOG_SIGN_OUT"
+        private const val TAG_INPUT_DIALOG = "github.io.mssjsg.bookbag.main.TAG_INPUT_DIALOG"
+        private const val TAG_MOVE = "github.io.mssjsg.bookbag.main.TAG_MOVE"
+        private const val TAG_CONFIRM_DIALOG = "github.io.mssjsg.bookbag.main.TAG_CONFIRM_DIALOG"
         private const val REQUEST_ID_MOVE_ITEMS = 1000
         private const val ARG_NEW_SHARED_URL = "github.io.mssjsg.bookbag.main.ARG_NEW_SHARED_URL"
 
