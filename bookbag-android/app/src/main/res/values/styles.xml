@@ -25,4 +25,7 @@
         <item name="android:textColor">@color/primary_dark</item>
     </style>
 
+    <style name="GoogleBtn" parent="Theme.AppCompat.Light">
+        <item name="colorButtonNormal">@color/google_btn_background</item>
+    </style>
 </resources>

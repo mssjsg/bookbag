@@ -33,17 +33,16 @@
             app:srcCompat="@drawable/ic_launcher_foreground"/>
 
         <Button
+            android:theme="@style/GoogleBtn"
             android:id="@+id/btn_signin_google"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
             android:text="@string/btn_signin_google"
             android:visibility="@{viewmodel.isLoading ? View.INVISIBLE : View.VISIBLE}"
+            android:drawableLeft="@{@drawable/ic_google_icon}"
+            android:drawablePadding="@dimen/normal_100"
+            android:paddingHorizontal="@dimen/normal_100"
+            android:paddingVertical="@dimen/normal_100"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

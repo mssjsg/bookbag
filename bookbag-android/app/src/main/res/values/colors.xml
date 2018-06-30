@@ -15,4 +15,6 @@
     <color name="bottom_action_divider">#daedc4</color>
     <color name="bottom_action_background">#b5db8a</color>
     <color name="item_selected">#dce775</color>
+
+    <color name="google_btn_background">#ffffff</color>
 </resources>
