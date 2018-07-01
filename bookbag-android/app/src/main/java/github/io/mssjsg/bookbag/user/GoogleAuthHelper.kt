@@ -85,11 +85,6 @@ class GoogleAuthHelper @Inject constructor() {
 
     fun signOut() {
         auth.signOut()
-        googleSignInClient?.signOut()
-    }
-
-    private fun revokeAccess() {
-        auth.signOut()
         googleSignInClient?.revokeAccess()
     }
 

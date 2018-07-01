@@ -1,6 +1,5 @@
 package github.io.mssjsg.bookbag.intro
 
-import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModel
 import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelProviders
@@ -16,6 +15,7 @@ import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.databinding.FragmentIntroBinding
 import github.io.mssjsg.bookbag.folderview.FolderViewFragment
 import github.io.mssjsg.bookbag.user.GoogleAuthHelper
+import github.io.mssjsg.bookbag.util.extension.observeNonNull
 
 class IntroFragment: BookbagFragment() {
 
@@ -32,9 +32,6 @@ class IntroFragment: BookbagFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         fragmentIntroBinding.setLifecycleOwner(this)
-        fragmentIntroBinding.btnSigninGoogle.setOnClickListener({
-            introViewModel.signIn()
-        })
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -43,14 +40,14 @@ class IntroFragment: BookbagFragment() {
                 .get(IntroViewModel::class.java)
         fragmentIntroBinding.viewmodel = introViewModel
 
-        introViewModel.userData.observe(this, Observer {
-            it?.let {
+        googleAuthHelper = introViewModel.googleAuthHelper
+        googleAuthHelper.fragment = this
+
+        introViewModel.isFinished.observeNonNull(this, { finished ->
+            if (finished) {
                 navigationManager?.setCurrentFragment(FolderViewFragment.newInstance())
             }
         })
-
-        googleAuthHelper = introViewModel.googleAuthHelper
-        googleAuthHelper.fragment = this
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
