@@ -15,7 +15,7 @@
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#eef4d7">
+        android:background="@drawable/background_intro">
 
         <ImageView
             android:id="@+id/imageView3"
