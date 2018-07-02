@@ -1,5 +1,6 @@
 package github.io.mssjsg.bookbag.data.source
 
+import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Single
 
@@ -17,4 +18,6 @@ interface BookbagDataSource<Item> {
     fun getItems(folderId: String? = null) : Flowable<List<Item>>
 
     fun getDirtyItems() : Flowable<List<Item>>
+
+    fun deleteAllItems(): Completable
 }

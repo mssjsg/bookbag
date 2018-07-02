@@ -4,6 +4,7 @@ import com.google.firebase.database.*
 import github.io.mssjsg.bookbag.data.source.BookbagDataSource
 import github.io.mssjsg.bookbag.user.BookbagUserData
 import github.io.mssjsg.bookbag.util.extension.encodeForFirebaseKey
+import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Single
 import java.util.concurrent.CopyOnWriteArraySet
@@ -104,6 +105,11 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
     override final fun getItems(folderId: String?): Flowable<List<LocalData>> {
         throw UnsupportedOperationException("not supported query items by id")
     }
+
+    override fun deleteAllItems(): Completable {
+        throw UnsupportedOperationException("not supported delete all item")
+    }
+
 
     abstract fun getItemFromSnapshot(dataSnapshot: DataSnapshot): RemoteData?
 

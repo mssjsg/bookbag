@@ -2,6 +2,7 @@ package github.io.mssjsg.bookbag.data.source.local
 
 import github.io.mssjsg.bookbag.data.Folder
 import github.io.mssjsg.bookbag.data.source.BookbagDataSource
+import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Single
 import javax.inject.Inject
@@ -12,6 +13,12 @@ import javax.inject.Singleton
  */
 @Singleton
 class FoldersLocalDataSource @Inject constructor(val foldersDao: FoldersDao) : BookbagDataSource<Folder> {
+    override fun deleteAllItems(): Completable {
+        return Completable.fromCallable({
+            foldersDao.deleteAll()
+        })
+    }
+
     override fun getDirtyItems(): Flowable<List<Folder>> {
         return foldersDao.getDirtyFolders()
     }

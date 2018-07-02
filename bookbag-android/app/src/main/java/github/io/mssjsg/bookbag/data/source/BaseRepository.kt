@@ -1,6 +1,7 @@
 package github.io.mssjsg.bookbag.data.source
 
 import github.io.mssjsg.bookbag.data.source.remote.RemoteDataSource
+import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Single
 import javax.inject.Inject
@@ -9,7 +10,6 @@ open class BaseRepository<RemoteData, LocalData> @Inject constructor(
         private val localDataSource: BookbagDataSource<LocalData>,
         private val remoteDataSource: RemoteDataSource<RemoteData, LocalData>
 ): BookbagDataSource<LocalData> {
-
     override fun getItem(id: String): Single<LocalData> {
         return localDataSource.getItem(id)
     }
@@ -54,4 +54,7 @@ open class BaseRepository<RemoteData, LocalData> @Inject constructor(
         })
     }
 
+    override fun deleteAllItems(): Completable {
+        return localDataSource.deleteAllItems()
+    }
 }

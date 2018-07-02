@@ -5,6 +5,7 @@ import com.google.firebase.database.FirebaseDatabase
 import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.source.remote.data.FirebaseBookmark
 import github.io.mssjsg.bookbag.user.BookbagUserData
+import io.reactivex.Completable
 import io.reactivex.Single
 import java.net.URLEncoder
 import javax.inject.Inject
@@ -14,6 +15,7 @@ import javax.inject.Singleton
 class BookmarksRemoteDataSource @Inject constructor(firebaseDatabase: FirebaseDatabase,
                                                     userData: BookbagUserData)
     : RemoteDataSource<FirebaseBookmark, Bookmark>(firebaseDatabase, userData, "bookmarks") {
+
     override fun convertLocalToRemoteData(localData: Bookmark): FirebaseBookmark {
         return FirebaseBookmark.create(localData)
     }

@@ -18,10 +18,10 @@ import github.io.mssjsg.bookbag.R
 import github.io.mssjsg.bookbag.databinding.FragmentFolderviewBinding
 import github.io.mssjsg.bookbag.folderselection.FolderSelectionFragment
 import github.io.mssjsg.bookbag.folderselection.event.FolderSelectionEvent
+import github.io.mssjsg.bookbag.folderview.FolderViewViewModel.PageState.*
 import github.io.mssjsg.bookbag.intro.IntroFragment
 import github.io.mssjsg.bookbag.list.ItemListContainerFragment
 import github.io.mssjsg.bookbag.util.extension.observeNonNull
-import github.io.mssjsg.bookbag.util.extension.observeNullable
 import github.io.mssjsg.bookbag.util.extension.putFolderId
 import github.io.mssjsg.bookbag.util.livebus.LiveBus
 import github.io.mssjsg.bookbag.widget.SimpleConfirmDialogFragment
@@ -79,13 +79,20 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(),
                     R.id.item_new_folder -> {
                         viewModel.onNewFolderButtonClick();true
                     }
-                    R.id.item_sign_out -> {
-                        viewModel.onSignOutButtonClick();true
+                    R.id.item_sign_in_out -> {
+                        viewModel.onSignInOutButtonClick();true
                     }
                     else -> false
                 }
             })
         }
+
+        viewModel.signInOutText.observeNonNull(this, { textType ->
+            folderViewBinding.layoutToolbar.toolbar.menu.findItem(R.id.item_sign_in_out).title = when(textType) {
+                FolderViewViewModel.SignInOutText.SIGN_IN -> getString(R.string.menu_item_sign_in)
+                FolderViewViewModel.SignInOutText.SIGN_OUT -> getString(R.string.menu_item_sign_out)
+            }
+        })
     }
 
     private fun observeViewModel() {
@@ -123,21 +130,21 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(),
 
         viewModel.pageState.observeNonNull(this, {
             when (it) {
-                FolderViewViewModel.PageState.CONFIRM_SIGN_OUT -> {
+                CONFIRM_SIGN_OUT -> {
                     if (childFragmentManager.findFragmentByTag(TAG_CONFIRM_DIALOG) == null) {
                         SimpleConfirmDialogFragment.newInstance(CONFIRM_DIALOG_SIGN_OUT,
                                 getString(R.string.confirm_sign_out))
                                 .show(childFragmentManager, TAG_CONFIRM_DIALOG)
                     }
                 }
-                FolderViewViewModel.PageState.CONFIRM_DELETE -> {
+                CONFIRM_DELETE -> {
                     if (childFragmentManager.findFragmentByTag(TAG_CONFIRM_DIALOG) == null) {
                         SimpleConfirmDialogFragment.newInstance(CONFIRM_DIALOG_DELETE_ITEMS,
                                 getString(R.string.confirm_delete_items))
                                 .show(childFragmentManager, TAG_CONFIRM_DIALOG)
                     }
                 }
-                FolderViewViewModel.PageState.MOVING_ITEMS -> {
+                MOVING_ITEMS -> {
                     navigationManager?.let { navigationManager ->
                         if (navigationManager.isFragmentAdded(TAG_CONFIRM_DIALOG)) {
                             return@observeNonNull
@@ -158,7 +165,7 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(),
                         navigationManager.addToBackStack(fragment, TAG_MOVE, R.anim.pop_enter_animation, R.anim.pop_exit_animation)
                     }
                 }
-                FolderViewViewModel.PageState.ADDING_FOLDER -> {
+                ADDING_FOLDER -> {
                     if (childFragmentManager.findFragmentByTag(TAG_INPUT_DIALOG) == null) {
                         SimpleInputDialogFragment.newInstance(CONFIRM_DIALOG_CREATE_NEW_FOLDER,
                                 hint = getString(R.string.hint_folder_name),
@@ -168,7 +175,7 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(),
 
                     true
                 }
-                FolderViewViewModel.PageState.BROWSE -> {
+                BROWSE -> {
                     childFragmentManager?.apply {
                         arrayOf(TAG_CONFIRM_DIALOG, TAG_MOVE, TAG_INPUT_DIALOG).forEach {
                             val fragment = findFragmentByTag(it)
@@ -178,8 +185,11 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(),
                         }
                     }
                 }
-                FolderViewViewModel.PageState.FINISHED -> {
+                APP_FINISHED -> {
                     activity?.finish()
+                }
+                VIEW_FINISHED -> {
+                    navigationManager?.setCurrentFragment(IntroFragment.newInstance())
                 }
             }
         })
@@ -203,12 +213,6 @@ class FolderViewFragment : ItemListContainerFragment<FolderViewViewModel>(),
             } else {
                 exitNoticeSnackbar?.dismiss()
                 exitNoticeSnackbar = null
-            }
-        })
-
-        viewModel.bookbagUserData.observeNullable(this, {
-            if (it == null) {
-                navigationManager?.setCurrentFragment(IntroFragment.newInstance())
             }
         })
     }

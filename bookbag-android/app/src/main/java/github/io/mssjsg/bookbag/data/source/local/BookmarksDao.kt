@@ -31,4 +31,7 @@ interface BookmarksDao {
 
     @Query("SELECT * FROM bookmarks WHERE dirty IS 1")
     fun getDirtyBookmarks(): Flowable<List<Bookmark>>
+
+    @Query("DELETE FROM bookmarks")
+    fun deleteAll()
 }

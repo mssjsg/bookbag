@@ -2,6 +2,7 @@ package github.io.mssjsg.bookbag.data.source.local
 
 import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.source.BookbagDataSource
+import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Single
 import javax.inject.Inject
@@ -12,6 +13,12 @@ import javax.inject.Singleton
  */
 @Singleton
 class BookmarksLocalDataSource @Inject constructor(val bookmarksDao: BookmarksDao) : BookbagDataSource<Bookmark> {
+    override fun deleteAllItems(): Completable {
+        return Completable.fromCallable({
+            bookmarksDao.deleteAll()
+        })
+    }
+
     override fun getItem(id: String): Single<Bookmark> {
         return bookmarksDao.getBookmark(id)
     }

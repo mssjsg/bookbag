@@ -57,16 +57,17 @@ class MainActivity : BookbagActivity(), NavigationManager {
         var newFragment: BookbagFragment? = null
         val sharedUrl = intent?.getSharedUrl() ?: ""
         val isSignedIn = bookbagUserData.isSignedIn
+        val isInOfflineMode = bookbagUserData.isInOfflineMode
         if (sharedUrl.isNotEmpty()) {
             newFragment = FolderViewFragment.newInstance(sharedUrl = sharedUrl)
         } else {
             var currentFragment = getCurrentFragment()
             currentFragment?.let {
-                if (!isSignedIn && it.isSignInRequired()) {
+                if (!isSignedIn && it.isSignInRequired() && !isInOfflineMode) {
                     newFragment = IntroFragment.newInstance()
                 }
             } ?: run {
-                if (isSignedIn) {
+                if (isSignedIn || isInOfflineMode) {
                     newFragment = FolderViewFragment.newInstance()
                 } else {
                     newFragment = IntroFragment.newInstance()
@@ -78,8 +79,11 @@ class MainActivity : BookbagActivity(), NavigationManager {
         }
     }
 
-    override fun setCurrentFragment(fragment: BookbagFragment) {
-        supportFragmentManager.beginTransaction().replace(R.id.container, fragment).commit()
+    override fun setCurrentFragment(fragment: BookbagFragment, enter: Int, exit: Int) {
+        supportFragmentManager.beginTransaction()
+                .setCustomAnimations(enter, exit, enter, exit)
+                .replace(R.id.container, fragment).commit()
+
     }
 
     private fun getCurrentFragment(): BookbagFragment? {

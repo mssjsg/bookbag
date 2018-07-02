@@ -100,6 +100,7 @@ open class ItemListViewModel @Inject constructor(val logger: Logger,
         }, {}))
 
         disposables.add(loadListItemsInteractor.getFlowable(LoadListItemsInteractor.Param(currentFolderId, filteredFolders))
+                .distinctUntilChanged()
                 .compose(rxTransformers.applySchedulersOnFlowable()).subscribe { listItems ->
                     items.clear()
                     items.addAll(listItems)

@@ -1,5 +1,6 @@
 package github.io.mssjsg.bookbag.util
 
+import io.reactivex.CompletableTransformer
 import io.reactivex.FlowableTransformer
 import io.reactivex.ObservableTransformer
 import io.reactivex.SingleTransformer
@@ -25,4 +26,9 @@ class RxTransformers @Inject constructor(val schedulers: RxSchedulers) {
         }
     }
 
+    fun applySchedulersOnCompletable(): CompletableTransformer {
+        return CompletableTransformer {
+            it.subscribeOn(schedulers.io()).observeOn(schedulers.mainThread())
+        }
+    }
 }

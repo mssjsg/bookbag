@@ -40,7 +40,7 @@
             android:text="@string/btn_signin_google"
             android:theme="@style/GoogleBtn"
             android:layout_marginTop="@dimen/large_100"
-            android:visibility="@{viewmodel.isGoogleSignInButtonVisible() ? View.INVISIBLE : View.VISIBLE}"
+            android:visibility="@{viewmodel.isGoogleSignInButtonVisible() ? View.VISIBLE : View.INVISIBLE}"
             android:onClick="@{() -> viewmodel.onSignInWithGoogleButtonClick()}"
             app:layout_constraintBottom_toTopOf="@+id/btn_signin_later"
             app:layout_constraintEnd_toEndOf="parent"
@@ -53,7 +53,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/btn_signin_later"
-            android:visibility="@{viewmodel.isSignInLaterButtonVisible() ? View.INVISIBLE : View.VISIBLE}"
+            android:visibility="@{viewmodel.isSignInLaterButtonVisible() ? View.VISIBLE : View.INVISIBLE}"
             android:layout_marginTop="@dimen/normal_100"
             android:onClick="@{() -> viewmodel.onSignInLaterButtonClick()}"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -72,7 +72,8 @@
             app:layout_constraintEnd_toStartOf="parent"
             app:layout_constraintStart_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.7"/>
 
     </android.support.constraint.ConstraintLayout>
 

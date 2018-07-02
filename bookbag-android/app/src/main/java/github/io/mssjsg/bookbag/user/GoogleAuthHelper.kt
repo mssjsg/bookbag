@@ -26,7 +26,7 @@ class GoogleAuthHelper @Inject constructor() {
     private var auth: FirebaseAuth
 
     private val _isLoading: MutableLiveData<Boolean> = MutableLiveData()
-    val isLoading: LiveData<Boolean> = _isLoading
+    val isLoading: LiveData<Boolean> get() = _isLoading
 
     var fragment:Fragment? = null
         set(value) {
@@ -42,7 +42,8 @@ class GoogleAuthHelper @Inject constructor() {
         }
 
     init {
-        auth = FirebaseAuth.getInstance();
+        auth = FirebaseAuth.getInstance()
+        _isLoading.value = false
     }
 
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

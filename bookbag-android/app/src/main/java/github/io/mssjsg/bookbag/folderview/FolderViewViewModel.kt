@@ -1,5 +1,6 @@
 package github.io.mssjsg.bookbag.folderview
 
+import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import github.io.mssjsg.bookbag.interactor.itemlist.*
 import github.io.mssjsg.bookbag.list.ItemListViewModel
@@ -23,8 +24,9 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
                                               val addFolderInteractor: AddFolderInteractor,
                                               val moveItemsInteractor: MoveItemsInteractor,
                                               val getBookmarkInteractor: GetBookmarkInteractor,
+                                              val clearDatabaseInteractor: ClearDatabaseInteractor,
                                               val googleAuthHelper: GoogleAuthHelper,
-                                              val bookbagUserData: BookbagUserData) : ItemListViewModel(
+                                              private val bookbagUserData: BookbagUserData) : ItemListViewModel(
         logger, rxTransformers, loadPreviewInteractor,
         loadListItemsInteractor, loadFoldersPathsInteractor, getFolderInteractor) {
     lateinit var folderViewComponent: FolderViewComponent
@@ -40,16 +42,32 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
     private var pendingUrlFromClipboard: String? = null
     var isShowingPasteFromClipboardNotice: MutableLiveData<Boolean> = MutableLiveData()
 
+    private val _signInOutText: MutableLiveData<SignInOutText> = MutableLiveData()
+    val signInOutText: LiveData<SignInOutText> get() = _signInOutText
+
     init {
         pageState.value = PageState.BROWSE
         isInMultiSelectionMode.value = false
         pageState.observeForever({
             it?.apply {
                 when (it) {
-                    PageState.BROWSE, PageState.FINISHED -> {
+                    PageState.BROWSE, PageState.APP_FINISHED -> {
                         clearSelection()
                     }
                 }
+            }
+        })
+
+        bookbagUserData.observeForever({
+            val isInOfflineMode = bookbagUserData.isInOfflineMode
+            if (it == null && !isInOfflineMode) {
+                pageState.value = PageState.VIEW_FINISHED
+            }
+
+            _signInOutText.value = if (isInOfflineMode) {
+                SignInOutText.SIGN_IN
+            } else {
+                SignInOutText.SIGN_OUT
             }
         })
     }
@@ -72,7 +90,7 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
 
         isShowingExitConfirmNotice.value?.let {
             if (it) {
-                pageState.value = PageState.FINISHED
+                pageState.value = PageState.APP_FINISHED
                 return true
             }
         }
@@ -123,8 +141,12 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
         pageState.value = PageState.ADDING_FOLDER
     }
 
-    fun onSignOutButtonClick() {
-        pageState.value = PageState.CONFIRM_SIGN_OUT
+    fun onSignInOutButtonClick() {
+        if (bookbagUserData.isSignedIn) {
+            pageState.value = PageState.CONFIRM_SIGN_OUT
+        } else {
+            pageState.value = PageState.VIEW_FINISHED
+        }
     }
 
     fun onConfirmSignOut() {
@@ -288,7 +310,14 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
     }
 
     private fun signOut() {
-        googleAuthHelper.signOut()
+        clearDatabaseInteractor.getCompletable(null)
+                .compose(rxTransformers.applySchedulersOnCompletable())
+                .subscribe({
+                    googleAuthHelper.signOut()
+                }, {
+                    logger.e(TAG, "failed to clear data")
+                })
+
     }
 
     enum class PageState {
@@ -297,10 +326,15 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
         ADDING_FOLDER,
         CONFIRM_DELETE,
         CONFIRM_SIGN_OUT,
-        FINISHED
+        VIEW_FINISHED,
+        APP_FINISHED
     }
 
     interface WebPageViewer {
         fun showPage(url: String)
+    }
+
+    enum class SignInOutText {
+        SIGN_IN, SIGN_OUT
     }
 }

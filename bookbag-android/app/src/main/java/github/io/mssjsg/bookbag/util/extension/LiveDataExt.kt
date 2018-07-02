@@ -21,3 +21,13 @@ fun <T> LiveData<T>.observeNullable(owner: LifecycleOwner, observer: (T?) -> Uni
         }
     })
 }
+
+fun <T> LiveData<T>.observeForeverNonNull(observer: (T) -> Unit) {
+    observeForever(object : Observer<T> {
+        override fun onChanged(t: T?) {
+            t?.let {
+                observer(t)
+            }
+        }
+    })
+}

@@ -1,47 +1,47 @@
 package github.io.mssjsg.bookbag.intro
 
-import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.Observer
-import github.io.mssjsg.bookbag.BookBagApplication
-import github.io.mssjsg.bookbag.folderview.FolderViewFragment
+import android.arch.lifecycle.ViewModel
 import github.io.mssjsg.bookbag.user.BookbagUserData
 import github.io.mssjsg.bookbag.user.GoogleAuthHelper
+import github.io.mssjsg.bookbag.util.extension.observeForeverNonNull
 import javax.inject.Inject
 
-class IntroViewModel @Inject constructor(application: BookBagApplication,
-                                         val googleAuthHelper: GoogleAuthHelper,
-                                         private val userData: BookbagUserData) : AndroidViewModel(application) {
+class IntroViewModel @Inject constructor(val googleAuthHelper: GoogleAuthHelper,
+                                         private val userData: BookbagUserData) : ViewModel() {
 
-    private val isLoading: LiveData<Boolean>
-        get() = googleAuthHelper.isLoading
-
-    val isGoogleSignInButtonVisible: LiveData<Boolean>
-        get() = isLoading
-
-    val isProgressVisible: LiveData<Boolean>
-        get() = isLoading
-
+    private val _isGoogleSignInButtonVisible: MutableLiveData<Boolean> = MutableLiveData()
+    private val _isProgressVisible: MutableLiveData<Boolean> = MutableLiveData()
     private val _isFinished: MutableLiveData<Boolean> = MutableLiveData()
-    val isFinished: LiveData<Boolean> = _isFinished
-
     private val _isSignInLaterButtonVisible: MutableLiveData<Boolean> = MutableLiveData()
-    val isSignInLaterButtonVisible: LiveData<Boolean> = _isSignInLaterButtonVisible
+
+    val isGoogleSignInButtonVisible: LiveData<Boolean> get() = _isGoogleSignInButtonVisible
+    val isProgressVisible: LiveData<Boolean> get() = _isProgressVisible
+    val isFinished: LiveData<Boolean> get() = _isFinished
+    val isSignInLaterButtonVisible: LiveData<Boolean> get() = _isSignInLaterButtonVisible
 
     fun onSignInWithGoogleButtonClick() {
+        userData.isInOfflineMode = false
         googleAuthHelper.signIn()
     }
 
     fun onSignInLaterButtonClick() {
+        userData.isInOfflineMode = true
         _isFinished.value = true
     }
 
     init {
-        userData.observeForever(Observer {
-            it?.let {
-                _isFinished.value = true
-            }
-        })
+        userData.observeForeverNonNull {
+            _isFinished.value = true
+        }
+
+        googleAuthHelper.isLoading.observeForever {
+            val isLoading: Boolean = it?.apply { this } ?: false
+
+            _isGoogleSignInButtonVisible.value = !isLoading
+            _isSignInLaterButtonVisible.value = !isLoading
+            _isProgressVisible.value = isLoading
+        }
     }
 }

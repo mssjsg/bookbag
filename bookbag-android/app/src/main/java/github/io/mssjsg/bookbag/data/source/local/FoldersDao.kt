@@ -2,6 +2,7 @@ package github.io.mssjsg.bookbag.data.source.local
 
 import android.arch.persistence.room.*
 import github.io.mssjsg.bookbag.data.Folder
+import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Single
 
@@ -34,4 +35,7 @@ interface FoldersDao {
 
     @Query("UPDATE folders SET parent_folder_id = :parentFolderId AND dirty = 1 WHERE folder_id = :folderId")
     fun moveFolder(folderId: String, parentFolderId: String?)
+
+    @Query("DELETE FROM folders")
+    fun deleteAll()
 }
