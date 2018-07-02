@@ -11,6 +11,7 @@
     <color name="divider">#b5db8a</color>
     <color name="path_backgournd">@color/divider</color>
     <color name="action_mode_background">#b5db8a</color>
+    <color name="button_background">#b5db8a</color>
 
     <color name="bottom_action_divider">#daedc4</color>
     <color name="bottom_action_background">#b5db8a</color>
