@@ -37,6 +37,8 @@ class FolderSelectionFragment : ItemListContainerFragment<FolderSelectionViewMod
             it.inflateMenu(R.menu.menu_folder_selection)
         }
 
+        mainBinding.layoutToolbar.logoImage.visibility = View.GONE
+
         mainBinding.btnConfirm.text = getConfirmButtonText(this)
 
         mainBinding.btnConfirm.setOnClickListener({
