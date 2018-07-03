@@ -5,7 +5,6 @@ import com.google.firebase.database.FirebaseDatabase
 import github.io.mssjsg.bookbag.data.Bookmark
 import github.io.mssjsg.bookbag.data.source.remote.data.FirebaseBookmark
 import github.io.mssjsg.bookbag.user.BookbagUserData
-import io.reactivex.Completable
 import io.reactivex.Single
 import java.net.URLEncoder
 import javax.inject.Inject
@@ -24,8 +23,8 @@ class BookmarksRemoteDataSource @Inject constructor(firebaseDatabase: FirebaseDa
         return localData.url
     }
 
-    override fun createRemoteDataWithParentFolderId(remoteData: FirebaseBookmark, parentFolderId: String?): FirebaseBookmark {
-        return remoteData.copy(folderId = parentFolderId)
+    override fun createRemoteDataWithParentFolderId(remoteData: FirebaseBookmark, parentFolderId: String?, createdDate: Long): FirebaseBookmark {
+        return remoteData.copy(folderId = parentFolderId, createdDate = createdDate)
     }
 
     override fun getIdFromRemoteData(remoteData: FirebaseBookmark): String {

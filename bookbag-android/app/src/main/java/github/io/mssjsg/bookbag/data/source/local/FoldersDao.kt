@@ -15,10 +15,10 @@ interface FoldersDao {
     @Query("SELECT * FROM folders WHERE dirty IS 1")
     fun getDirtyFolders(): Flowable<List<Folder>>
 
-    @Query("SELECT * FROM folders WHERE parent_folder_id IS NULL")
+    @Query("SELECT * FROM folders WHERE parent_folder_id IS NULL ORDER BY name ASC")
     fun getHomeFolders(): Flowable<List<Folder>>
 
-    @Query("SELECT * FROM folders WHERE parent_folder_id = :folderId")
+    @Query("SELECT * FROM folders WHERE parent_folder_id = :folderId ORDER BY name ASC")
     fun getFoldersByParentFolderId(folderId: String): Flowable<List<Folder>>
 
     @Query("SELECT * FROM folders WHERE folder_id = :folderId")

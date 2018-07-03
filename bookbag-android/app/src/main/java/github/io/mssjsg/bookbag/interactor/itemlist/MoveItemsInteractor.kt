@@ -11,11 +11,14 @@ class MoveItemsInteractor @Inject constructor(val bookmarksRepository: Bookmarks
     override fun getSingle(param: Param): Single<Int> {
         val parentFolderId = param.parentFolderId
         val sources = arrayListOf<Single<Int>>()
+
+        val time = System.currentTimeMillis()
+
         sources.addAll(param.bookmarkUrls.map { url ->
-            bookmarksRepository.moveItem(url, parentFolderId)
+            bookmarksRepository.moveItem(url, parentFolderId, time)
         })
         sources.addAll(param.folderIds.map { folderId ->
-            foldersRepository.moveItem(folderId, parentFolderId)
+            foldersRepository.moveItem(folderId, parentFolderId, time)
         })
 
         return Single.zip(sources, {

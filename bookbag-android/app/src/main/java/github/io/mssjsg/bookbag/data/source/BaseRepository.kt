@@ -18,9 +18,9 @@ open class BaseRepository<RemoteData, LocalData> @Inject constructor(
         return localDataSource.getDirtyItems()
     }
 
-    override fun moveItem(id: String, folderId: String?): Single<Int> {
-        return Single.zip(listOf(localDataSource.moveItem(id, folderId),
-                remoteDataSource.moveItem(id, folderId)), {
+    override fun moveItem(id: String, folderId: String?, createdDate: Long): Single<Int> {
+        return Single.zip(listOf(localDataSource.moveItem(id, folderId, createdDate),
+                remoteDataSource.moveItem(id, folderId, createdDate)), {
             it[0] as Int
         })
     }

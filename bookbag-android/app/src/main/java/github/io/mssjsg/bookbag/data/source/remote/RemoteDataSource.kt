@@ -50,7 +50,7 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
         })
     }
 
-    override final fun moveItem(itemId: String, parentFolderId: String?): Single<Int> {
+    override final fun moveItem(itemId: String, parentFolderId: String?, createdDate: Long): Single<Int> {
         val key = itemId.encodeForFirebaseKey()
         return Single.create({ emitter ->
             val databaseReference = rootReference?.child(key)
@@ -62,7 +62,8 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
                     dataSnapshot?.let {
                         val firebaseItem = getItemFromSnapshot(dataSnapshot)
                         firebaseItem?.let {
-                            val newFirebaseItem = createRemoteDataWithParentFolderId(firebaseItem, parentFolderId)
+                            val newFirebaseItem = createRemoteDataWithParentFolderId(firebaseItem,
+                                    parentFolderId, createdDate)
                             databaseReference.setValue(newFirebaseItem).addOnCompleteListener({ task ->
                                 if (!emitter.isDisposed) {
                                     if (task.isSuccessful) {
@@ -121,7 +122,9 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
 
     abstract fun getIdFromLocalData(localData: LocalData): String
 
-    abstract fun createRemoteDataWithParentFolderId(remoteData: RemoteData, parentFolderId: String?): RemoteData
+    abstract fun createRemoteDataWithParentFolderId(remoteData: RemoteData,
+                                                    parentFolderId: String?,
+                                                    createdDate: Long): RemoteData
 
     private inner class ChildListener : ChildEventListener {
 

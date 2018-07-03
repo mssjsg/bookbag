@@ -14,7 +14,7 @@ interface BookmarksDao {
     @Query("SELECT * FROM bookmarks WHERE url = :url")
     fun getBookmark(url: String): Single<Bookmark>
 
-    @Query("SELECT * FROM bookmarks WHERE folder_id IS NULL")
+    @Query("SELECT * FROM bookmarks WHERE folder_id IS NULL ORDER BY create_date DESC")
     fun getHomeBookmarks(): Flowable<List<Bookmark>>
 
     @Query("SELECT * FROM bookmarks WHERE folder_id = :folderId ORDER BY create_date DESC")

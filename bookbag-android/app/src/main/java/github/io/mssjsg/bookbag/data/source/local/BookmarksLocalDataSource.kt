@@ -27,10 +27,11 @@ class BookmarksLocalDataSource @Inject constructor(val bookmarksDao: BookmarksDa
         return bookmarksDao.getDirtyBookmarks()
     }
 
-    override fun moveItem(id: String, folderId: String?): Single<Int> {
+    override fun moveItem(id: String, folderId: String?, createdDate: Long): Single<Int> {
         return bookmarksDao.getBookmark(id)
                 .map { bookmark ->
-                    bookmarksDao.updateBookmark(bookmark.copy(folderId = folderId, dirty = true))
+                    bookmarksDao.updateBookmark(bookmark.copy(folderId = folderId, dirty = true,
+                            createdDate = createdDate))
                 }
     }
 

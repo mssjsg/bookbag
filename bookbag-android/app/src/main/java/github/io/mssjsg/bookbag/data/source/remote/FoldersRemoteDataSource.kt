@@ -12,7 +12,9 @@ import javax.inject.Singleton
 @Singleton
 class FoldersRemoteDataSource @Inject constructor(firebaseDatabase: FirebaseDatabase, userData: BookbagUserData): RemoteDataSource<FirebaseFolder, Folder>(firebaseDatabase,
         userData, "folders") {
-    override fun createRemoteDataWithParentFolderId(remoteData: FirebaseFolder, parentFolderId: String?): FirebaseFolder {
+    override fun createRemoteDataWithParentFolderId(remoteData: FirebaseFolder,
+                                                    parentFolderId: String?,
+                                                    createdDate: Long): FirebaseFolder {
         return remoteData.copy(parentFolderId = parentFolderId)
     }
 

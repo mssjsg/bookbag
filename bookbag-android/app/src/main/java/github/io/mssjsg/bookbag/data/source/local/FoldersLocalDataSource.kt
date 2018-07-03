@@ -23,7 +23,7 @@ class FoldersLocalDataSource @Inject constructor(val foldersDao: FoldersDao) : B
         return foldersDao.getDirtyFolders()
     }
 
-    override fun moveItem(folderId: String, parentFolderId: String?): Single<Int> {
+    override fun moveItem(folderId: String, parentFolderId: String?, createdDate: Long): Single<Int> {
         return foldersDao.getFolder(folderId)
                 .map { folder ->
                     foldersDao.updateFolder(folder.copy(parentFolderId = parentFolderId, dirty = true))

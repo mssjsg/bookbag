@@ -7,7 +7,7 @@ import io.reactivex.Single
 interface BookbagDataSource<Item> {
     fun saveItem(item: Item): Single<String>
 
-    fun moveItem(id: String, folderId: String?): Single<Int>
+    fun moveItem(id: String, folderId: String?, createdDate: Long): Single<Int>
 
     fun updateItem(item: Item): Single<String>
 
