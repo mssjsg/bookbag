@@ -84,11 +84,11 @@ abstract class RemoteDataSource<RemoteData, LocalData>(val firebaseDatabase: Fir
         return Single.zip(itemsIds.map { id ->
             val key = id.encodeForFirebaseKey()
             Single.create<Boolean>({ emitter ->
-                rootReference?.child(key)?.removeValue()?.addOnCompleteListener({
+                rootReference?.child(key)?.removeValue()?.apply {
                     if (!emitter.isDisposed) {
-                        emitter.onSuccess(it.isSuccessful)
+                        emitter.onSuccess(true)
                     }
-                })
+                }
             })
         }, {
             it.filter { it == true }.count()

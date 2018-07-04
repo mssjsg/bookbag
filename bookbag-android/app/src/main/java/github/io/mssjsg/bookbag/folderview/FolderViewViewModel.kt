@@ -19,7 +19,7 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
                                               loadListItemsInteractor: LoadListItemsInteractor,
                                               loadFoldersPathsInteractor: LoadFolderPathsInteractor,
                                               getFolderInteractor: GetFolderInteractor,
-                                              val deleteFolderInteractor: DeleteFolderInteractor,
+                                              val deleteItemsInteractor: DeleteItemsInteractor,
                                               val addBookmarkInteractor: AddBookmarkInteractor,
                                               val addFolderInteractor: AddFolderInteractor,
                                               val moveItemsInteractor: MoveItemsInteractor,
@@ -273,7 +273,7 @@ class FolderViewViewModel @Inject constructor(logger: Logger,
             }
         })
 
-        deleteFolderInteractor.getSingle(DeleteFolderInteractor.Param(selectedUrls, selectedFolderIds))
+        deleteItemsInteractor.getSingle(DeleteItemsInteractor.Param(selectedUrls, selectedFolderIds))
                 .compose(rxTransformers.applySchedulersOnSingle()).subscribe({
                     logger.d(TAG, "items deleted count: $it")
                 }, { throwable ->

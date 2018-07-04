@@ -9,8 +9,8 @@ import io.reactivex.Single
 import io.reactivex.functions.BiFunction
 import javax.inject.Inject
 
-class DeleteFolderInteractor @Inject constructor(val bookmarksRepository: BookmarksRepository,
-                                                 val foldersRepository: FoldersRepository): RxSingleInteractor<DeleteFolderInteractor.Param, Int> {
+class DeleteItemsInteractor @Inject constructor(val bookmarksRepository: BookmarksRepository,
+                                                val foldersRepository: FoldersRepository): RxSingleInteractor<DeleteItemsInteractor.Param, Int> {
     override fun getSingle(param: Param): Single<Int> {
         return deleteItemsRecursively(param.urls, param.folderIds)
     }
